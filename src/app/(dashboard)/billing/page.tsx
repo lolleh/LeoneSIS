@@ -215,9 +215,12 @@ export default function BillingPage() {
                 <CardTitle className="text-2xl">
                   Le{" "}
                   {accountsQuery.data?.accounts
-                    ? accountsQuery.data.accounts
-                        .reduce((sum, a) => sum + (a.balance as number), 0)
-                        .toFixed(2)
+                    ? Number(
+                        accountsQuery.data.accounts.reduce(
+                          (sum, a) => sum + Number(a.balance),
+                          0
+                        )
+                      ).toFixed(2)
                     : "0.00"}
                 </CardTitle>
               </CardHeader>
