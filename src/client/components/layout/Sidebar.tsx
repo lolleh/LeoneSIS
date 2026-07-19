@@ -100,7 +100,7 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
             "flex items-center gap-3 border-b border-white/10",
             collapsed ? "justify-center px-3 py-4" : "px-5 py-4"
           )}
-          style={{ background: "linear-gradient(135deg, hsla(239,84%,67%,0.15) 0%, hsla(262,83%,58%,0.15) 100%)" }}
+          style={{ background: "rgba(0,0,0,0.25)" }}
         >
           <img
             src="/logo.png"
