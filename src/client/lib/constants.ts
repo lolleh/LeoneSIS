@@ -60,7 +60,7 @@ export const NAV_ITEMS: NavCategory[] = [
       { title: "Notices", href: "/notices", icon: Bell },
       { title: "Communication", href: "/communication", icon: MessageSquare },
       { title: "Broadcast", href: "/broadcast", icon: Radio },
-      { title: "Billing", href: "/billing", icon: CreditCard },
+      { title: "Billing & Fees", href: "/billing", icon: CreditCard },
       { title: "Discipline", href: "/discipline", icon: Swords },
     ],
   },
