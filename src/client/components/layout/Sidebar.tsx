@@ -16,7 +16,7 @@ import {
 import {
   ChevronsLeft,
   ChevronsRight,
-  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -40,19 +40,19 @@ function SidebarItem({
     <Link
       href={item.href}
       className={cn(
-        "group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200",
+        "group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-all duration-150",
         isActive
-          ? "bg-white/20 text-white shadow-lg shadow-black/10"
+          ? "bg-white/20 text-white"
           : "text-white/70 hover:bg-white/10 hover:text-white",
         collapsed && "justify-center px-2"
       )}
     >
       <Icon
         className={cn(
-          "h-4 w-4 shrink-0 transition-all duration-200",
+          "h-4 w-4 shrink-0 transition-all duration-150",
           isActive
-            ? "text-white scale-110"
-            : "text-white/60 group-hover:text-white group-hover:scale-105"
+            ? "text-white"
+            : "text-white/50 group-hover:text-white"
         )}
       />
       {!collapsed && <span className="truncate">{item.title}</span>}
@@ -71,11 +71,11 @@ function SidebarItem({
   return linkContent;
 }
 
-const COLLAPSIBLE_CATEGORIES = ["Academic", "Operations"];
+const COLLAPSIBLE_LABELS = ["Academic", "Operations"];
 
 export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
   const pathname = usePathname();
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
 
   const filteredCategories = useMemo(() => {
     if (!userRole) return NAV_ITEMS;
@@ -87,109 +87,96 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
     })).filter((category) => category.items.length > 0);
   }, [userRole]);
 
-  const toggleCategory = useCallback((label: string) => {
-    setExpandedCategories((prev) => {
+  const toggle = useCallback((label: string) => {
+    setOpenSections((prev) => {
       const next = new Set(prev);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
-      }
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
       return next;
     });
   }, []);
 
-  const isExpanded = useCallback(
+  const isOpen = useCallback(
     (label: string) => {
       if (collapsed) return true;
-      if (!COLLAPSIBLE_CATEGORIES.includes(label)) return true;
-      return expandedCategories.has(label);
+      if (!COLLAPSIBLE_LABELS.includes(label)) return true;
+      return openSections.has(label);
     },
-    [collapsed, expandedCategories]
+    [collapsed, openSections]
   );
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
-  const hasActiveChild = useCallback(
-    (items: NavCategory["items"]) =>
-      items.some((item) => isActive(item.href)),
-    [pathname]
-  );
+  const hasActiveChild = (items: NavCategory["items"]) =>
+    items.some((item) => isActive(item.href));
 
   return (
     <TooltipProvider>
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex flex-col sidebar-gradient text-white transition-all duration-300 ease-in-out",
-          collapsed ? "w-[68px]" : "w-[260px]",
+          collapsed ? "w-[68px]" : "w-[252px]",
           "md:relative"
         )}
       >
+        {/* Logo */}
         <div
           className={cn(
-            "flex items-center gap-3 border-b border-white/10",
-            collapsed ? "justify-center px-3 py-3" : "px-5 py-3"
+            "flex items-center gap-2.5 border-b border-white/10",
+            collapsed ? "justify-center px-3 py-3" : "px-4 py-3"
           )}
           style={{ background: "rgba(0,0,0,0.25)" }}
         >
-          <img
-            src="/logo.png"
-            alt="LeoneSIS"
-            className={cn("h-10 w-auto shrink-0")}
-          />
+          <img src="/logo.png" alt="LeoneSIS" className="h-9 w-auto shrink-0" />
           {!collapsed && (
             <div className="flex flex-col overflow-hidden">
-              <span className="text-[14px] font-extrabold leading-tight tracking-wide">
-                {SCHOOL_NAME}
-              </span>
-              <span className="text-[9px] font-medium text-white/50 leading-tight tracking-wider uppercase">
-                School Management System
-              </span>
+              <span className="text-[13px] font-extrabold leading-tight tracking-wide">{SCHOOL_NAME}</span>
+              <span className="text-[8px] font-medium text-white/40 leading-tight tracking-wider uppercase">School Management System</span>
             </div>
           )}
         </div>
 
+        {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-1.5 py-2 scrollbar-thin">
-          <div className="space-y-3">
-            {filteredCategories.map((category, catIdx) => {
-              const expanded = isExpanded(category.label);
-              const isCollapsible = COLLAPSIBLE_CATEGORIES.includes(category.label);
+          {filteredCategories.map((category, catIdx) => {
+            const open = isOpen(category.label);
+            const collapsible = COLLAPSIBLE_LABELS.includes(category.label);
 
-              return (
-                <div key={category.label}>
-                  {!collapsed && isCollapsible ? (
-                    <button
-                      onClick={() => toggleCategory(category.label)}
-                      className={cn(
-                        "mb-1 flex w-full items-center justify-between rounded-lg px-2 py-1 text-left text-[10px] font-semibold uppercase tracking-wider transition-colors",
-                        hasActiveChild(category.items)
-                          ? "text-white/70"
-                          : "text-white/40 hover:text-white/60"
-                      )}
-                    >
-                      {category.label}
-                      <ChevronDown
-                        className={cn(
-                          "h-3 w-3 transition-transform duration-200",
-                          expanded && "rotate-180"
-                        )}
-                      />
-                    </button>
-                  ) : !collapsed ? (
-                    <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                      {category.label}
-                    </p>
-                  ) : null}
-                  {collapsed && catIdx > 0 && (
-                    <Separator className="my-1.5 bg-white/10" />
-                  )}
-                  <div
+            return (
+              <div key={category.label} className={catIdx > 0 ? "mt-2" : ""}>
+                {/* Separator between categories when collapsed */}
+                {collapsed && catIdx > 0 && (
+                  <Separator className="mb-1.5 mt-1 bg-white/10" />
+                )}
+
+                {/* Category header */}
+                {!collapsed && (
+                  <button
+                    onClick={() => collapsible && toggle(category.label)}
                     className={cn(
-                      "space-y-0.5 overflow-hidden transition-all duration-200",
-                      !expanded && isCollapsible ? "max-h-0 opacity-0" : "max-h-[500px] opacity-100"
+                      "flex w-full items-center gap-1 rounded px-2 py-1 text-left text-[10px] font-bold uppercase tracking-wider",
+                      collapsible
+                        ? "cursor-pointer select-none hover:bg-white/5"
+                        : "cursor-default",
+                      hasActiveChild(category.items) ? "text-indigo-300" : "text-white/35"
                     )}
                   >
+                    {collapsible && (
+                      <ChevronRight
+                        className={cn(
+                          "h-2.5 w-2.5 shrink-0 transition-transform duration-150",
+                          open && "rotate-90"
+                        )}
+                      />
+                    )}
+                    <span className={collapsible ? "" : "ml-3.5"}>{category.label}</span>
+                  </button>
+                )}
+
+                {/* Items */}
+                {(!collapsible || open || collapsed) && (
+                  <div className="space-y-0.5 py-0.5">
                     {category.items.map((item) => (
                       <SidebarItem
                         key={item.href}
@@ -199,19 +186,20 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
                       />
                     ))}
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
-        <div className="border-t border-white/10 p-2">
+        {/* Collapse button */}
+        <div className="border-t border-white/10 p-1.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggle}
             className={cn(
-              "w-full text-white/60 hover:text-white hover:bg-white/10 h-8",
+              "w-full h-8 text-white/50 hover:text-white hover:bg-white/10",
               collapsed && "justify-center px-2"
             )}
           >
