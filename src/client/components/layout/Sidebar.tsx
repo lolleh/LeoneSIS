@@ -192,26 +192,35 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
           })}
         </nav>
 
-        {/* Collapse button */}
+        {/* Collapse / Expand button */}
         <div className="border-t border-white/10 p-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className={cn(
-              "w-full h-8 text-white/50 hover:text-white hover:bg-white/10",
-              collapsed && "justify-center px-2"
-            )}
-          >
-            {collapsed ? (
-              <ChevronsRight className="h-4 w-4" />
-            ) : (
-              <>
-                <ChevronsLeft className="h-4 w-4" />
-                <span className="ml-1 text-xs">Collapse</span>
-              </>
-            )}
-          </Button>
+          {collapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggle}
+                  className="h-8 w-full text-white/50 hover:text-white hover:bg-white/10"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-white text-foreground font-medium">
+                Expand sidebar
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="w-full h-8 text-white/50 hover:text-white hover:bg-white/10"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+              <span className="ml-1 text-xs">Collapse</span>
+            </Button>
+          )}
         </div>
       </aside>
     </TooltipProvider>
