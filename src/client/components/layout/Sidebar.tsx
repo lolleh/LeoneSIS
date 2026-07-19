@@ -97,18 +97,23 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
       >
         <div
           className={cn(
-            "flex h-16 items-center gap-3 border-b border-white/10 px-4",
-            collapsed && "justify-center px-2"
+            "flex items-center gap-3 border-b border-white/10",
+            collapsed ? "justify-center px-3 py-4" : "px-5 py-4"
           )}
+          style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(16,185,129,0.25) 100%)" }}
         >
-          <img src="/logo.png" alt="LeoneSIS Logo" className={cn("h-20 w-auto", collapsed && "h-14")} />
+          <img
+            src="/logo.png"
+            alt="LeoneSIS"
+            className={cn("h-20 w-auto shrink-0")}
+          />
           {!collapsed && (
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-bold leading-tight truncate tracking-wide">
+              <span className="text-[15px] font-extrabold leading-tight tracking-wide">
                 {SCHOOL_NAME}
               </span>
-              <span className="text-[11px] text-white/50 leading-tight">
-                School Management
+              <span className="text-[10px] font-medium text-white/50 leading-tight tracking-wider uppercase">
+                School Management System
               </span>
             </div>
           )}

@@ -58,6 +58,13 @@ model School {
   reportCards   ReportCard[]
   transcripts  Transcript[]
   behaviorIncidents BehaviorIncident[]
+  sections      Section[]
+  systemRollovers SystemRollover[]
+  systemLogs    SystemAccessLog[]
+  broadcastGroups BroadcastGroup[]
+  broadcastMessages BroadcastMessage[]
+  emailConfig   EmailConfig?
+  behaviorCategories BehaviorCategory[]
 
   @@map("schools")
 }
@@ -135,15 +142,31 @@ model GradeLevel {
   code          String?
   sortOrder     Int      @default(0) @map("sort_order")
   nextGradeLevelId String? @map("next_grade_level_id")
+  equivalencies GradeLevelEquivalency[]
   isActive      Boolean  @default(true) @map("is_active")
 
   school        School   @relation(fields: [schoolId], references: [id])
   nextGradeLevel GradeLevel? @relation("GradeLevelChain", fields: [nextGradeLevelId], references: [id])
   previousGradeLevels GradeLevel[] @relation("GradeLevelChain")
   enrollments   Enrollment[]
+  sections      Section[]
 
   @@unique([schoolId, name])
   @@map("grade_levels")
+}
+
+model GradeLevelEquivalency {
+  id            String   @id @default(uuid())
+  gradeLevelId  String   @map("grade_level_id")
+  system        String
+  value         String
+  numericValue  Decimal? @map("numeric_value")
+  description   String?
+
+  gradeLevel    GradeLevel @relation(fields: [gradeLevelId], references: [id])
+
+  @@unique([gradeLevelId, system])
+  @@map("grade_level_equivalencies")
 }
 
 model Room {
@@ -152,8 +175,13 @@ model Room {
   name          String
   code          String?
   capacity      Int?
+  building      String?
+  floor         Int?
   roomType      String?  @map("room_type")
+  description   String?
   isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
 
   school        School   @relation(fields: [schoolId], references: [id])
   courseSections CourseSection[]
@@ -161,6 +189,27 @@ model Room {
 
   @@unique([schoolId, name])
   @@map("rooms")
+}
+
+model Section {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  gradeLevelId  String   @map("grade_level_id")
+  name          String
+  code          String?
+  academicYear  String   @map("academic_year")
+  homeroomTeacherId String? @map("homeroom_teacher_id")
+  maxCapacity   Int      @default(40) @map("max_capacity")
+  currentEnrollment Int  @default(0) @map("current_enrollment")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+  gradeLevel    GradeLevel @relation(fields: [gradeLevelId], references: [id])
+
+  @@unique([schoolId, gradeLevelId, name, academicYear])
+  @@map("sections")
 }
 
 model MarkingPeriod {
@@ -206,6 +255,7 @@ model Calendar {
   school        School   @relation(fields: [schoolId], references: [id])
   events        CalendarEvent[]
   bellSchedules BellSchedule[]
+  dayTypes      BellScheduleDay[]
 
   @@map("calendars")
 }
@@ -262,31 +312,48 @@ model Student {
   id            String   @id @default(uuid())
   schoolId      String   @map("school_id")
   userId        String?  @unique @map("user_id")
+  salutation    String?
   firstName     String   @map("first_name")
-  lastName      String   @map("last_name")
   middleName    String?  @map("middle_name")
+  lastName      String   @map("last_name")
+  suffix        String?
   preferredName String?  @map("preferred_name")
   photo         String?
   gender        String?
   race          String?
   ethnicity     String?
   dateOfBirth   DateTime @map("date_of_birth")
+  maritalStatus String?  @map("marital_status")
+  nationality   String?
+  languages     Json?    
+  ssn           String?
   primaryLanguage String? @map("primary_language")
   homeAddress   String?  @map("home_address")
   homeCity      String?  @map("home_city")
   homeState     String?  @map("home_state")
   homeZip       String?  @map("home_zip")
   homeCountry   String?  @map("home_country")
+  mailingAddress String? @map("mailing_address")
+  mailingCity   String?  @map("mailing_city")
+  mailingState  String?  @map("mailing_state")
+  mailingZip    String?  @map("mailing_zip")
+  mailingCountry String? @map("mailing_country")
+  sameAsHome    Boolean  @default(true) @map("same_as_home")
   personalEmails Json?   @map("personal_emails")
   personalPhones Json?  @map("personal_phones")
+  socialMedia   Json?    @map("social_media")
   estimatedGradDate DateTime? @map("estimated_grad_date")
+  enrollmentDate DateTime? @map("enrollment_date")
+  cohort        String?
+  isEconomicDisadvantage Boolean @default(false) @map("is_economic_disadvantage")
+  isFreeLunchEligible Boolean @default(false) @map("is_free_lunch_eligible")
   is504Eligible Boolean  @default(false) @map("is_504_eligible")
   isSpEd        Boolean  @default(false) @map("is_sp_ed")
   isLep         Boolean  @default(false) @map("is_lep")
   portalAccess  Boolean  @default(true) @map("portal_access")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
 
   school        School   @relation(fields: [schoolId], references: [id])
   user          User?    @relation(fields: [userId], references: [id])
@@ -304,6 +371,9 @@ model Student {
   feeAccount    FeeAccount?
   behaviorIncidents BehaviorIncident[]
   scheduleRequests ScheduleRequest[]
+  comments      StudentComment[]
+  notes         StudentNote[]
+  siblings      StudentSibling[]
 
   @@map("students")
 }
@@ -423,22 +493,37 @@ model Staff {
   id            String   @id @default(uuid())
   schoolId      String   @map("school_id")
   userId        String?  @unique @map("user_id")
+  salutation    String?
   firstName     String   @map("first_name")
-  lastName      String   @map("last_name")
   middleName    String?  @map("middle_name")
+  lastName      String   @map("last_name")
+  suffix        String?
   photo         String?
   gender        String?
   dateOfBirth   DateTime? @map("date_of_birth")
+  maritalStatus String?  @map("marital_status")
+  nationality   String?
+  languages     Json?
+  ssn           String?
   primaryLanguage String? @map("primary_language")
   homeAddress   String?  @map("home_address")
+  homeCity      String?  @map("home_city")
+  homeState     String?  @map("home_state")
+  homeZip       String?  @map("home_zip")
+  homeCountry   String?  @map("home_country")
   personalEmails Json?   @map("personal_emails")
   personalPhones Json?  @map("personal_phones")
+  socialMedia   Json?    @map("social_media")
+  emergencyContactName String? @map("emergency_contact_name")
+  emergencyContactPhone String? @map("emergency_contact_phone")
+  emergencyContactRelation String? @map("emergency_contact_relation")
   gradeLevelsTaught Json? @map("grade_levels_taught")
   subjectsTaught Json?  @map("subjects_taught")
+  hireDate      DateTime? @map("hire_date")
   portalAccess  Boolean  @default(true) @map("portal_access")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
 
   school        School   @relation(fields: [schoolId], references: [id])
   user          User?    @relation(fields: [userId], references: [id])
@@ -450,6 +535,8 @@ model Staff {
   behaviorIncidents BehaviorIncident[] @relation("StaffBehavior")
   attendanceRecords AttendanceRecord[] @relation("AttendanceTakenBy")
   attendanceOverrides AttendanceRecord[] @relation("AttendanceOverrideBy")
+  lessonPlans   LessonPlan[]
+  staffNotes    StaffNote[]
 
   @@map("staff")
 }
@@ -1066,6 +1153,7 @@ model BehaviorIncident {
   schoolId      String   @map("school_id")
   studentId     String   @map("student_id")
   reportedById  String   @map("reported_by_id")
+  categoryId    String?  @map("category_id")
   incidentDate  DateTime @map("incident_date")
   category      String
   severity      String?
@@ -1082,6 +1170,7 @@ model BehaviorIncident {
   school        School   @relation(fields: [schoolId], references: [id])
   student       Student  @relation(fields: [studentId], references: [id])
   reportedBy    Staff    @relation("StaffBehavior", fields: [reportedById], references: [id])
+  behaviorCategory BehaviorCategory? @relation(fields: [categoryId], references: [id])
 
   @@map("behavior_incidents")
 }
@@ -1150,4 +1239,290 @@ model SystemSetting {
 
   @@unique([schoolId, key])
   @@map("system_settings")
+}
+
+// ============================================
+// BELL SCHEDULE DAY TYPES
+// ============================================
+
+model BellScheduleDay {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  calendarId    String   @map("calendar_id")
+  name          String
+  dayCode       String   @map("day_code")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+
+  calendar      Calendar @relation(fields: [calendarId], references: [id])
+  assignments   BellScheduleDayAssignment[]
+
+  @@unique([schoolId, dayCode])
+  @@map("bell_schedule_days")
+}
+
+model BellScheduleDayAssignment {
+  id            String   @id @default(uuid())
+  bellScheduleDayId String @map("bell_schedule_day_id")
+  date          DateTime @map("date")
+
+  bellScheduleDay BellScheduleDay @relation(fields: [bellScheduleDayId], references: [id])
+
+  @@unique([bellScheduleDayId, date])
+  @@map("bell_schedule_day_assignments")
+}
+
+// ============================================
+// END-OF-YEAR ROLLOVER
+// ============================================
+
+model SystemRollover {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  fromYear      String   @map("from_year")
+  toYear        String   @map("to_year")
+  status        String   @default("pending")
+  startedById   String?  @map("started_by_id")
+  completedById String?  @map("completed_by_id")
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  studentsProcessed Int  @default(0) @map("students_processed")
+  notes         String?
+  errorLog      Json?    @map("error_log")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+
+  @@map("system_rollovers")
+}
+
+// ============================================
+// SYSTEM ACCESS LOG
+// ============================================
+
+model SystemAccessLog {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  userId        String   @map("user_id")
+  action        String
+  module        String?
+  detail        Json?
+  ipAddress     String?  @map("ip_address")
+  userAgent     String?  @map("user_agent")
+  sessionId     String?  @map("session_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, createdAt])
+  @@index([userId])
+  @@map("system_access_logs")
+}
+
+// ============================================
+// STUDENT NOTES & COMMENTS
+// ============================================
+
+model StudentComment {
+  id            String   @id @default(uuid())
+  studentId     String   @map("student_id")
+  userId        String   @map("user_id")
+  comment       String
+  isInternal    Boolean  @default(true) @map("is_internal")
+  category      String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  student       Student  @relation(fields: [studentId], references: [id])
+
+  @@map("student_comments")
+}
+
+model StudentNote {
+  id            String   @id @default(uuid())
+  studentId     String   @map("student_id")
+  userId        String   @map("user_id")
+  noteType      String   @map("note_type")
+  subject       String?
+  body          String
+  activityDate  DateTime? @map("activity_date")
+  nextFollowUp  DateTime? @map("next_follow_up")
+  isCompleted   Boolean  @default(false) @map("is_completed")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  student       Student  @relation(fields: [studentId], references: [id])
+
+  @@map("student_notes")
+}
+
+model StudentSibling {
+  id            String   @id @default(uuid())
+  studentId     String   @map("student_id")
+  siblingStudentId String @map("sibling_student_id")
+
+  student       Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, siblingStudentId])
+  @@map("student_siblings")
+}
+
+model StaffNote {
+  id            String   @id @default(uuid())
+  staffId       String   @map("staff_id")
+  userId        String   @map("user_id")
+  noteType      String   @map("note_type")
+  subject       String?
+  body          String
+  activityDate  DateTime? @map("activity_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  staff         Staff    @relation(fields: [staffId], references: [id])
+
+  @@map("staff_notes")
+}
+
+// ============================================
+// LESSON PLANS
+// ============================================
+
+model LessonPlan {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  staffId       String   @map("staff_id")
+  courseSectionId String? @map("course_section_id")
+  subject       String
+  course        String
+  lessonId      String   @map("lesson_id")
+  unit          String?
+  instructionalGoal String @map("instructional_goal")
+  content       String
+  learningStandardIds Json? @map("learning_standard_ids")
+  calendarEventId String? @map("calendar_event_id")
+  isPublic      Boolean  @default(true) @map("is_public")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  staff         Staff    @relation(fields: [staffId], references: [id])
+
+  @@map("lesson_plans")
+}
+
+// ============================================
+// BROADCAST GROUPS & EMAIL CONFIG
+// ============================================
+
+model BroadcastGroup {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  name          String
+  description   String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+  members       BroadcastGroupMember[]
+  messages      BroadcastMessage[]
+
+  @@map("broadcast_groups")
+}
+
+model BroadcastGroupMember {
+  id            String   @id @default(uuid())
+  groupId       String   @map("group_id")
+  userId        String   @map("user_id")
+
+  group         BroadcastGroup @relation(fields: [groupId], references: [id])
+
+  @@unique([groupId, userId])
+  @@map("broadcast_group_members")
+}
+
+model BroadcastMessage {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  groupId       String?  @map("group_id")
+  senderId      String   @map("sender_id")
+  subject       String
+  body          String
+  attachments   Json?
+  sentViaEmail  Boolean  @default(false) @map("sent_via_email")
+  sentViaApp    Boolean  @default(true) @map("sent_via_app")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+  group         BroadcastGroup? @relation(fields: [groupId], references: [id])
+
+  @@map("broadcast_messages")
+}
+
+model EmailConfig {
+  id            String   @id @default(uuid())
+  schoolId      String   @unique @map("school_id")
+  provider      String   @default("smtp")
+  host          String?
+  port          Int?
+  username      String?
+  password      String?
+  senderEmail   String?  @map("sender_email")
+  senderName    String?  @map("sender_name")
+  useTls        Boolean  @default(true) @map("use_tls")
+  apiKey        String?  @map("api_key")
+  apiSecret     String?  @map("api_secret")
+  isActive      Boolean  @default(true) @map("is_active")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+
+  @@map("email_configs")
+}
+
+// ============================================
+// BEHAVIOR CATEGORY & ACTION PLAN
+// ============================================
+
+model BehaviorCategory {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  name          String
+  description   String?
+  categoryType  String   @default("violation") @map("category_type")
+  severityLevel Int      @default(1) @map("severity_level")
+  color         String?
+  isActive      Boolean  @default(true) @map("is_active")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+  incidents     BehaviorIncident[]
+
+  @@map("behavior_categories")
+}
+
+model BehaviorActionPlan {
+  id            String   @id @default(uuid())
+  incidentId    String   @map("incident_id")
+  studentId     String   @map("student_id")
+  actionType    String   @map("action_type")
+  description   String
+  startDate     DateTime @map("start_date")
+  endDate       DateTime? @map("end_date")
+  assignedToId  String?  @map("assigned_to_id")
+  status        String   @default("active")
+  outcome       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("behavior_action_plans")
+}
+
+// ============================================
+// SCHEDULE CONFIGURATION
+// ============================================
+
+model ScheduleConfig {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  scheduleType  String   @map("schedule_type")
+  cycleDays     Int?     @map("cycle_days")
+  config        Json?
+  isDefault     Boolean  @default(false) @map("is_default")
+
+  @@map("schedule_configs")
 }

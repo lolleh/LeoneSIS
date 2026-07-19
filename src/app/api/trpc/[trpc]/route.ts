@@ -2,12 +2,25 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "@/server/api/root";
 import type { Context } from "@/server/api/trpc";
 import { db } from "@/server/db";
+import { auth } from "@/server/auth";
 
-function createContext(): Context {
+async function createContext(): Promise<Context> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return { db, schoolId: null, user: null };
+  }
+
   return {
     db,
-    schoolId: null,
-    user: null,
+    schoolId: session.user.schoolId ?? null,
+    user: {
+      id: session.user.id,
+      email: session.user.email ?? "",
+      name: session.user.name ?? "",
+      role: session.user.role ?? "STUDENT",
+      schoolId: session.user.schoolId ?? "",
+    },
   };
 }
 

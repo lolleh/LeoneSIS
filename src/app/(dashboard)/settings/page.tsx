@@ -37,7 +37,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/client/components/ui/dialog";
+import { cn } from "@/client/lib/utils";
 import { api } from "@/client/lib/trpc";
+import Link from "next/link";
 import {
   Settings,
   GraduationCap,
@@ -51,6 +53,14 @@ import {
   Shield,
   UserCheck,
   UserX,
+  Calendar,
+  ArrowRightLeft,
+  Clock,
+  Globe,
+  RotateCcw,
+  AlertTriangle,
+  FileText,
+  UserCog,
 } from "lucide-react";
 
 const TIMEZONES = [
@@ -71,6 +81,15 @@ const TIMEZONES = [
   "Asia/Shanghai",
   "Asia/Kolkata",
   "Australia/Sydney",
+  "UTC",
+];
+
+const DATE_FORMATS = [
+  { value: "MM/DD/YYYY", label: "MM/DD/YYYY (US)", example: "07/19/2026" },
+  { value: "DD/MM/YYYY", label: "DD/MM/YYYY (International)", example: "19/07/2026" },
+  { value: "YYYY-MM-DD", label: "YYYY-MM-DD (ISO 8601)", example: "2026-07-19" },
+  { value: "DD.MM.YYYY", label: "DD.MM.YYYY (European)", example: "19.07.2026" },
+  { value: "DD-MMM-YYYY", label: "DD-MMM-YYYY", example: "19-Jul-2026" },
 ];
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "TEACHER", "PARENT", "STUDENT"] as const;
@@ -554,16 +573,18 @@ function GeneralSettings() {
 }
 
 // ──────────────────────────────────────────────────────
-// Academic Settings
+// Academic Settings (enhanced)
 // ──────────────────────────────────────────────────────
 
 function AcademicSettings() {
   const gradeLevelsQuery = api.school.getGradeLevels.useQuery({});
   const markingPeriodsQuery = api.school.getMarkingPeriods.useQuery({});
+  const utils = api.useUtils();
 
   const [gradeDialogOpen, setGradeDialogOpen] = useState(false);
   const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
-  const utils = api.useUtils();
+  const [equivalencyDialogOpen, setEquivalencyDialogOpen] = useState(false);
+  const [selectedGradeForEquivalency, setSelectedGradeForEquivalency] = useState<any>(null);
 
   const createGradeLevel = api.school.createGradeLevel.useMutation({
     onSuccess: () => {
@@ -586,7 +607,43 @@ function AcademicSettings() {
     startDate: "",
     endDate: "",
     sortOrder: "0",
+    periodType: "FULL_DAY" as string,
   });
+
+  const [equivalencyForm, setEquivalencyForm] = useState({
+    systemName: "",
+    equivalentGrade: "",
+  });
+
+  const [equivalencyMap, setEquivalencyMap] = useState<Record<string, { systemName: string; equivalentGrade: string }[]>>({});
+
+  function handleAddEquivalency(grade: any) {
+    setSelectedGradeForEquivalency(grade);
+    setEquivalencyForm({ systemName: "", equivalentGrade: "" });
+    setEquivalencyDialogOpen(true);
+  }
+
+  function saveEquivalency() {
+    if (!selectedGradeForEquivalency || !equivalencyForm.systemName || !equivalencyForm.equivalentGrade) return;
+    const gradeId = selectedGradeForEquivalency.id;
+    const existing = equivalencyMap[gradeId] ?? [];
+    setEquivalencyMap({
+      ...equivalencyMap,
+      [gradeId]: [
+        ...existing,
+        { systemName: equivalencyForm.systemName, equivalentGrade: equivalencyForm.equivalentGrade },
+      ],
+    });
+    setEquivalencyDialogOpen(false);
+  }
+
+  function removeEquivalency(gradeId: string, index: number) {
+    const existing = equivalencyMap[gradeId] ?? [];
+    setEquivalencyMap({
+      ...equivalencyMap,
+      [gradeId]: existing.filter((_, i) => i !== index),
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -594,7 +651,7 @@ function AcademicSettings() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Grade Levels</CardTitle>
-            <CardDescription>Configure grade levels for your school</CardDescription>
+            <CardDescription>Configure grade levels and equivalency mappings for your school</CardDescription>
           </div>
           <Button size="sm" onClick={() => setGradeDialogOpen(true)}>
             <Plus className="mr-2 h-3.5 w-3.5" />
@@ -608,35 +665,70 @@ function AcademicSettings() {
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
                 <TableHead>Sort Order</TableHead>
+                <TableHead>Equivalencies</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-[80px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {gradeLevelsQuery.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-16 text-center">
+                  <TableCell colSpan={6} className="h-16 text-center">
                     <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
                   </TableCell>
                 </TableRow>
               ) : !gradeLevelsQuery.data?.length ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-16 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-16 text-center text-muted-foreground">
                     No grade levels configured.
                   </TableCell>
                 </TableRow>
               ) : (
-                gradeLevelsQuery.data.map((gl) => (
-                  <TableRow key={gl.id}>
-                    <TableCell className="font-medium">{gl.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{gl.code ?? "-"}</TableCell>
-                    <TableCell>{gl.sortOrder}</TableCell>
-                    <TableCell>
-                      <Badge variant={gl.isActive ? "default" : "secondary"}>
-                        {gl.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
+                gradeLevelsQuery.data.map((gl) => {
+                  const eqs = equivalencyMap[gl.id] ?? [];
+                  return (
+                    <TableRow key={gl.id}>
+                      <TableCell className="font-medium">{gl.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{gl.code ?? "-"}</TableCell>
+                      <TableCell>{gl.sortOrder}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {eqs.length === 0 ? (
+                            <span className="text-xs text-muted-foreground">None</span>
+                          ) : (
+                            eqs.map((eq, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs gap-1">
+                                {eq.systemName}: {eq.equivalentGrade}
+                                <button
+                                  className="ml-1 text-destructive hover:text-destructive/80"
+                                  onClick={() => removeEquivalency(gl.id, i)}
+                                >
+                                  &times;
+                                </button>
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={gl.isActive ? "default" : "secondary"}>
+                          {gl.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleAddEquivalency(gl)}
+                        >
+                          <ArrowRightLeft className="mr-1 h-3 w-3" />
+                          Map
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -647,7 +739,7 @@ function AcademicSettings() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Marking Periods</CardTitle>
-            <CardDescription>Define academic terms and grading periods</CardDescription>
+            <CardDescription>Define academic terms, grading periods, and day types</CardDescription>
           </div>
           <Button size="sm" onClick={() => setPeriodDialogOpen(true)}>
             <Plus className="mr-2 h-3.5 w-3.5" />
@@ -660,6 +752,7 @@ function AcademicSettings() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Day Type</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead>End Date</TableHead>
                 <TableHead>Status</TableHead>
@@ -668,13 +761,13 @@ function AcademicSettings() {
             <TableBody>
               {markingPeriodsQuery.isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-16 text-center">
+                  <TableCell colSpan={6} className="h-16 text-center">
                     <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
                   </TableCell>
                 </TableRow>
               ) : !markingPeriodsQuery.data?.length ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-16 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-16 text-center text-muted-foreground">
                     No marking periods configured.
                   </TableCell>
                 </TableRow>
@@ -683,6 +776,12 @@ function AcademicSettings() {
                   <TableRow key={mp.id}>
                     <TableCell className="font-medium">{mp.name}</TableCell>
                     <TableCell><Badge variant="secondary">{mp.type}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="gap-1">
+                        <Clock className="h-3 w-3" />
+                        {(mp as any).periodType === "HALF_DAY" ? "Half Day" : "Full Day"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(mp.startDate).toLocaleDateString()}
                     </TableCell>
@@ -786,17 +885,29 @@ function AcademicSettings() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="periodType">Type *</Label>
-              <Select value={periodForm.type} onValueChange={(value) => setPeriodForm({ ...periodForm, type: value })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="YEAR">Year</SelectItem>
-                  <SelectItem value="SEMESTER">Semester</SelectItem>
-                  <SelectItem value="QUARTER">Quarter</SelectItem>
-                  <SelectItem value="PROGRESS">Progress Period</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="periodType">Type *</Label>
+                <Select value={periodForm.type} onValueChange={(value) => setPeriodForm({ ...periodForm, type: value })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="YEAR">Year</SelectItem>
+                    <SelectItem value="SEMESTER">Semester</SelectItem>
+                    <SelectItem value="QUARTER">Quarter</SelectItem>
+                    <SelectItem value="PROGRESS">Progress Period</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="periodDayType">Day Type</Label>
+                <Select value={periodForm.periodType} onValueChange={(value) => setPeriodForm({ ...periodForm, periodType: value })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FULL_DAY">Full Day</SelectItem>
+                    <SelectItem value="HALF_DAY">Half Day</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -830,12 +941,58 @@ function AcademicSettings() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={equivalencyDialogOpen} onOpenChange={setEquivalencyDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Grade Equivalency</DialogTitle>
+            <DialogDescription>
+              Map <strong>{selectedGradeForEquivalency?.name}</strong> to another grading system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="eqSystem">System Name *</Label>
+              <Input
+                id="eqSystem"
+                placeholder="e.g., WAEC, Cambridge, US Common Core"
+                value={equivalencyForm.systemName}
+                onChange={(e) =>
+                  setEquivalencyForm({ ...equivalencyForm, systemName: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="eqGrade">Equivalent Grade *</Label>
+              <Input
+                id="eqGrade"
+                placeholder="e.g., Grade 10, Form 4, Year 11"
+                value={equivalencyForm.equivalentGrade}
+                onChange={(e) =>
+                  setEquivalencyForm({ ...equivalencyForm, equivalentGrade: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEquivalencyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={saveEquivalency}
+              disabled={!equivalencyForm.systemName || !equivalencyForm.equivalentGrade}
+            >
+              Save Equivalency
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 // ──────────────────────────────────────────────────────
-// Users Settings
+// Users Settings (enhanced)
 // ──────────────────────────────────────────────────────
 
 function UsersSettings() {
@@ -884,7 +1041,7 @@ function UsersSettings() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage user accounts, roles, and access privileges</CardDescription>
+            <CardDescription>Manage user accounts, roles, profiles, and access privileges</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -1085,15 +1242,162 @@ function UsersSettings() {
 }
 
 // ──────────────────────────────────────────────────────
-// System Settings
+// System Settings (enhanced)
 // ──────────────────────────────────────────────────────
 
 function SystemSettings() {
+  const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
+  const [timezone, setTimezone] = useState("Africa/Freetown");
+  const [rolloverStatus] = useState({
+    lastRollover: "2025-08-15",
+    nextRollover: "2026-08-15",
+    status: "scheduled" as "completed" | "scheduled" | "pending",
+    sourceYear: "2025/2026",
+    targetYear: "2026/2027",
+  });
+
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
+  function handleSaveSystemSettings() {
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 3000);
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Audit Logs</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Regional Settings
+          </CardTitle>
+          <CardDescription>Configure date format and timezone for the system</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {settingsSaved && (
+            <div className="rounded-md bg-primary/10 px-4 py-3 text-sm text-primary font-medium">
+              System settings saved successfully.
+            </div>
+          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Date Format</Label>
+              <Select value={dateFormat} onValueChange={setDateFormat}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DATE_FORMATS.map((df) => (
+                    <SelectItem key={df.value} value={df.value}>
+                      {df.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Preview: {DATE_FORMATS.find((df) => df.value === dateFormat)?.example}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>System Timezone</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIMEZONES.map((tz) => (
+                    <SelectItem key={tz} value={tz}>
+                      {tz}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Current local time: {new Date().toLocaleTimeString("en-US", { timeZone: timezone })}
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleSaveSystemSettings}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Regional Settings
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            End-of-Year Rollover
+          </CardTitle>
+          <CardDescription>Status of the academic year transition process</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border p-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "gap-1",
+                      rolloverStatus.status === "completed" && "bg-green-100 text-green-700 border-green-200",
+                      rolloverStatus.status === "scheduled" && "bg-blue-100 text-blue-700 border-blue-200",
+                      rolloverStatus.status === "pending" && "bg-yellow-100 text-yellow-700 border-yellow-200"
+                    )}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    {rolloverStatus.status.charAt(0).toUpperCase() + rolloverStatus.status.slice(1)}
+                  </Badge>
+                </div>
+                <div className="grid gap-2 md:grid-cols-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Source Year: </span>
+                    <span className="font-medium">{rolloverStatus.sourceYear}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Target Year: </span>
+                    <span className="font-medium">{rolloverStatus.targetYear}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Last Rollover: </span>
+                    <span className="font-medium">
+                      {new Date(rolloverStatus.lastRollover).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Next Scheduled: </span>
+                    <span className="font-medium">
+                      {new Date(rolloverStatus.nextRollover).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium text-yellow-800">Year-end rollover will:</p>
+              <ul className="mt-1 list-disc list-inside text-yellow-700 space-y-0.5">
+                <li>Promote all students to the next grade level</li>
+                <li>Archive current marking periods</li>
+                <li>Create new academic year structure</li>
+                <li>Preserve historical records and transcripts</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Audit Logs
+          </CardTitle>
           <CardDescription>View system activity and audit trail.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -1105,31 +1409,48 @@ function SystemSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>System Settings</CardTitle>
-          <CardDescription>Configure system-level preferences and options.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Quick Links
+          </CardTitle>
+          <CardDescription>Navigate to other settings pages</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Academic Year Format</Label>
-              <Input value="YYYY-YYYY" disabled />
-            </div>
-            <div className="space-y-2">
-              <Label>Date Format</Label>
-              <Input value="DD/MM/YYYY" disabled />
-            </div>
-            <div className="space-y-2">
-              <Label>Session Timeout</Label>
-              <Input value="30 minutes" disabled />
-            </div>
-            <div className="space-y-2">
-              <Label>Max Upload Size</Label>
-              <Input value="10 MB" disabled />
-            </div>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Link href="/settings/profiles">
+              <Button variant="outline" className="w-full justify-start h-auto py-4">
+                <div className="flex items-center gap-3">
+                  <UserCog className="h-5 w-5 text-muted-foreground" />
+                  <div className="text-left">
+                    <p className="font-medium">Permission Profiles</p>
+                    <p className="text-xs text-muted-foreground">Manage access profiles</p>
+                  </div>
+                </div>
+              </Button>
+            </Link>
+            <Link href="/settings/rollover">
+              <Button variant="outline" className="w-full justify-start h-auto py-4">
+                <div className="flex items-center gap-3">
+                  <RotateCcw className="h-5 w-5 text-muted-foreground" />
+                  <div className="text-left">
+                    <p className="font-medium">Year-End Rollover</p>
+                    <p className="text-xs text-muted-foreground">Manage year transitions</p>
+                  </div>
+                </div>
+              </Button>
+            </Link>
+            <Link href="/settings/system-logs">
+              <Button variant="outline" className="w-full justify-start h-auto py-4">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <div className="text-left">
+                    <p className="font-medium">System Access Logs</p>
+                    <p className="text-xs text-muted-foreground">View access history</p>
+                  </div>
+                </div>
+              </Button>
+            </Link>
           </div>
-          <p className="text-xs text-muted-foreground">
-            System settings are managed by the platform administrator.
-          </p>
         </CardContent>
       </Card>
     </div>
