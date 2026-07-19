@@ -65,6 +65,7 @@ model School {
 model User {
   id            String   @id @default(uuid())
   schoolId      String   @map("school_id")
+  username      String
   email         String
   name          String
   passwordHash  String   @map("password_hash")
@@ -86,6 +87,7 @@ model User {
   student       Student?
   staff         Staff?
 
+  @@unique([schoolId, username])
   @@unique([schoolId, email])
   @@map("users")
 }

@@ -10,10 +10,8 @@ import { Label } from "@/client/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/client/components/ui/card";
 import {
   Select,
@@ -22,14 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/client/components/ui/select";
-import { GraduationCap, Loader2 } from "lucide-react";
+import { Loader2, ArrowRight, School } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [schoolId, setSchoolId] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,14 +46,14 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        email,
+        username,
         password,
         schoolId,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        setError("Invalid username or password. Please try again.");
       } else {
         router.push("/dashboard");
         router.refresh();
@@ -69,100 +66,100 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-lg">
-      <CardHeader className="space-y-1 text-center">
-        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <GraduationCap className="h-6 w-6 text-primary" />
-        </div>
-        <CardTitle className="text-2xl font-bold">LeoneSIS</CardTitle>
-        <CardDescription>
-          Sign in to your school account
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="school">School</Label>
-            <Select value={schoolId} onValueChange={setSchoolId}>
-              <SelectTrigger id="school">
-                <SelectValue
-                  placeholder={
-                    schoolsLoading ? "Loading schools..." : "Select your school"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {schools?.map((school) => (
-                  <SelectItem key={school.id} value={school.id}>
-                    {school.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="w-full max-w-md">
+      <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-xl">
+        <CardHeader className="space-y-4 pb-6 text-center">
+          <div className="mx-auto">
+            <img src="/logo.png" alt="LeoneSIS Logo" className="h-50 w-auto mx-auto" />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <input
-              id="remember"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-input"
-              disabled={isLoading}
-            />
-            <Label htmlFor="remember" className="text-sm font-normal">
-              Remember me
-            </Label>
-          </div>
-        </CardContent>
-
-        <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign In"
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-5">
+            {error && (
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive font-medium">
+                {error}
+              </div>
             )}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+
+            <div className="space-y-2">
+              <Label htmlFor="school" className="text-sm font-semibold">School</Label>
+              <Select value={schoolId} onValueChange={setSchoolId}>
+                <SelectTrigger id="school" className="h-11 rounded-xl border-2 focus:border-primary">
+                  <SelectValue
+                    placeholder={
+                      schoolsLoading ? "Loading schools..." : "Select your school"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {schools?.map((school) => (
+                    <SelectItem key={school.id} value={school.id}>
+                      <div className="flex items-center gap-2">
+                        <School className="h-4 w-4 text-primary" />
+                        {school.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-semibold">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoComplete="username"
+                disabled={isLoading}
+                className="h-11 rounded-xl border-2 focus:border-primary"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                disabled={isLoading}
+                className="h-11 rounded-xl border-2 focus:border-primary"
+              />
+            </div>
+          </CardContent>
+
+          <CardFooter className="pb-8">
+            <Button
+              type="submit"
+              className="w-full h-11 rounded-xl gradient-primary text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover-lift"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+
+      <p className="mt-6 text-center text-xs text-white/70">
+        Powered by LeoneSIS &middot; Sierra Leone
+      </p>
+    </div>
   );
 }

@@ -8,13 +8,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
         schoolId: { label: "School ID", type: "text" },
       },
       async authorize(credentials) {
         if (
-          !credentials?.email ||
+          !credentials?.username ||
           !credentials?.password ||
           !credentials?.schoolId
         ) {
@@ -23,9 +23,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await db.user.findUnique({
           where: {
-            schoolId_email: {
+            schoolId_username: {
               schoolId: credentials.schoolId as string,
-              email: credentials.email as string,
+              username: credentials.username as string,
             },
           },
           select: {

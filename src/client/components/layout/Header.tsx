@@ -73,19 +73,20 @@ export function Header({ onMenuToggle, notificationCount = 0, user }: HeaderProp
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-primary/10 bg-white/80 backdrop-blur-xl px-4 lg:px-6">
       <Button
         variant="ghost"
         size="icon"
-        className="shrink-0 md:hidden"
+        className="shrink-0 md:hidden hover:bg-primary/10"
         onClick={onMenuToggle}
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-5 w-5 text-primary" />
         <span className="sr-only">Toggle menu</span>
       </Button>
 
-      <div className="flex items-center gap-2">
-        <h1 className="text-lg font-semibold tracking-tight">{breadcrumb}</h1>
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-1 rounded-full bg-gradient-to-b from-primary to-accent" />
+        <h1 className="text-lg font-bold tracking-tight text-foreground">{breadcrumb}</h1>
       </div>
 
       <div className="flex-1" />
@@ -93,10 +94,10 @@ export function Header({ onMenuToggle, notificationCount = 0, user }: HeaderProp
       <div className="flex items-center gap-2">
         {searchOpen ? (
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
             <Input
               placeholder="Search..."
-              className="w-[200px] pl-9 lg:w-[300px]"
+              className="w-[200px] pl-9 lg:w-[300px] border-primary/20 focus:border-primary rounded-xl"
               autoFocus
               onBlur={() => setSearchOpen(false)}
               onKeyDown={(e) => {
@@ -109,18 +110,19 @@ export function Header({ onMenuToggle, notificationCount = 0, user }: HeaderProp
             variant="ghost"
             size="icon"
             onClick={() => setSearchOpen(true)}
+            className="hover:bg-primary/10"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-5 w-5 text-muted-foreground" />
             <span className="sr-only">Search</span>
           </Button>
         )}
 
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="relative hover:bg-primary/10">
+          <Bell className="h-5 w-5 text-muted-foreground" />
           {notificationCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -right-1 -top-1 h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold"
+              className="absolute -right-1 -top-1 h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-lg"
             >
               {notificationCount > 99 ? "99+" : notificationCount}
             </Badge>
@@ -130,13 +132,13 @@ export function Header({ onMenuToggle, notificationCount = 0, user }: HeaderProp
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 px-2">
-              <Avatar className="h-8 w-8">
+            <Button variant="ghost" className="gap-2 px-2 hover:bg-primary/10">
+              <Avatar className="h-9 w-9 ring-2 ring-primary/20">
                 <AvatarImage src={user?.image} alt={user?.name ?? "User"} />
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                <AvatarFallback className="gradient-primary text-white text-xs font-bold">{initials}</AvatarFallback>
               </Avatar>
               <div className="hidden flex-col items-start text-left md:flex">
-                <span className="text-sm font-medium leading-none">
+                <span className="text-sm font-semibold leading-none">
                   {user?.name ?? "User"}
                 </span>
                 {user?.role && (
@@ -148,32 +150,32 @@ export function Header({ onMenuToggle, notificationCount = 0, user }: HeaderProp
               <ChevronDown className="hidden h-4 w-4 text-muted-foreground md:block" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 rounded-xl">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{user?.name ?? "User"}</p>
+                <p className="text-sm font-semibold">{user?.name ?? "User"}</p>
                 <p className="text-xs text-muted-foreground">
                   {user?.email ?? ""}
                 </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/profile" className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
+            <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+              <Link href="/profile">
+                <User className="mr-2 h-4 w-4 text-primary" />
                 Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
+            <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+              <Link href="/settings">
+                <Settings className="mr-2 h-4 w-4 text-accent" />
                 Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleLogout}
-              className="cursor-pointer text-destructive focus:text-destructive"
+              className="rounded-lg cursor-pointer text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Log out

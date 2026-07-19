@@ -110,6 +110,19 @@ export const schoolRouter = router({
       return school;
     }),
 
+  getOwnSchool: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.schoolId) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "No school associated with your account" });
+    }
+    const school = await ctx.db.school.findUnique({
+      where: { id: ctx.schoolId },
+    });
+    if (!school) {
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }
+    return school;
+  }),
+
   create: adminProcedure
     .input(schoolSchema)
     .mutation(async ({ input, ctx }) => {
