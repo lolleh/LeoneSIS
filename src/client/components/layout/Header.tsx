@@ -73,7 +73,7 @@ export function Header({ onMenuToggle, notificationCount = 0, user }: HeaderProp
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-primary/10 bg-white/80 backdrop-blur-xl px-4 lg:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border glass px-4 lg:px-6">
       <Button
         variant="ghost"
         size="icon"
