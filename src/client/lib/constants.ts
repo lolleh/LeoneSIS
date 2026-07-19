@@ -39,17 +39,18 @@ export const NAV_ITEMS: NavCategory[] = [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { title: "Students", href: "/students", icon: Users },
       { title: "Staff", href: "/staff", icon: Users },
+      { title: "Admissions", href: "/admissions", icon: UserPlus },
     ],
   },
   {
     label: "Academic",
     items: [
       { title: "Courses", href: "/courses", icon: BookOpen },
+      { title: "Sections", href: "/sections", icon: FileText },
       { title: "Scheduling", href: "/scheduling", icon: Calendar },
       { title: "Attendance", href: "/attendance", icon: ClipboardCheck },
       { title: "Grades", href: "/grades", icon: GraduationCap },
       { title: "Lesson Plans", href: "/lesson-plans", icon: ScrollText },
-      { title: "Sections", href: "/sections", icon: FileText },
     ],
   },
   {
@@ -57,7 +58,6 @@ export const NAV_ITEMS: NavCategory[] = [
     items: [
       { title: "Calendar", href: "/calendar", icon: Calendar },
       { title: "Notices", href: "/notices", icon: Bell },
-      { title: "Admissions", href: "/admissions", icon: UserPlus },
       { title: "Communication", href: "/communication", icon: MessageSquare },
       { title: "Broadcast", href: "/broadcast", icon: Radio },
       { title: "Billing", href: "/billing", icon: CreditCard },

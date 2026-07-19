@@ -67,23 +67,6 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   ENROLLED: "default",
 };
 
-const GRADE_LEVELS = [
-  "Pre-K",
-  "Kindergarten",
-  "1st Grade",
-  "2nd Grade",
-  "3rd Grade",
-  "4th Grade",
-  "5th Grade",
-  "6th Grade",
-  "7th Grade",
-  "8th Grade",
-  "9th Grade",
-  "10th Grade",
-  "11th Grade",
-  "12th Grade",
-];
-
 function NewApplicationForm({ onClose }: { onClose: () => void }) {
   const utils = api.useUtils();
   const createMutation = api.admissions.create.useMutation({
@@ -92,6 +75,9 @@ function NewApplicationForm({ onClose }: { onClose: () => void }) {
       onClose();
     },
   });
+
+  const { data: gradeLevels } = api.school.getGradeLevels.useQuery({});
+  const { data: schools } = api.school.list.useQuery();
 
   const [form, setForm] = useState({
     schoolId: "",
@@ -121,6 +107,25 @@ function NewApplicationForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="schoolId">School *</Label>
+        <Select
+          value={form.schoolId}
+          onValueChange={(value) => setForm({ ...form, schoolId: value, gradeLevelApplied: "" })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select school" />
+          </SelectTrigger>
+          <SelectContent>
+            {schools?.map((school) => (
+              <SelectItem key={school.id} value={school.id}>
+                {school.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="studentFirstName">Student First Name *</Label>
@@ -180,14 +185,17 @@ function NewApplicationForm({ onClose }: { onClose: () => void }) {
             onValueChange={(value) => setForm({ ...form, gradeLevelApplied: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select grade level" />
+              <SelectValue placeholder={form.schoolId ? "Select grade level" : "Select a school first"} />
             </SelectTrigger>
             <SelectContent>
-              {GRADE_LEVELS.map((grade) => (
-                <SelectItem key={grade} value={grade}>
-                  {grade}
-                </SelectItem>
-              ))}
+              {gradeLevels
+                ?.filter((gl) => gl.schoolId === form.schoolId)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((gl) => (
+                  <SelectItem key={gl.id} value={gl.name}>
+                    {gl.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
