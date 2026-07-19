@@ -39,7 +39,7 @@ function SidebarItem({
     <Link
       href={item.href}
       className={cn(
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+        "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
         isActive
           ? "bg-white/20 text-white shadow-lg shadow-black/10"
           : "text-white/70 hover:bg-white/10 hover:text-white",
@@ -48,7 +48,7 @@ function SidebarItem({
     >
       <Icon
         className={cn(
-          "h-5 w-5 shrink-0 transition-all duration-200",
+          "h-4 w-4 shrink-0 transition-all duration-200",
           isActive
             ? "text-white scale-110"
             : "text-white/60 group-hover:text-white group-hover:scale-105"
@@ -98,40 +98,40 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
         <div
           className={cn(
             "flex items-center gap-3 border-b border-white/10",
-            collapsed ? "justify-center px-3 py-4" : "px-5 py-4"
+            collapsed ? "justify-center px-3 py-3" : "px-5 py-3"
           )}
           style={{ background: "rgba(0,0,0,0.25)" }}
         >
           <img
             src="/logo.png"
             alt="LeoneSIS"
-            className={cn("h-20 w-auto shrink-0")}
+            className={cn("h-14 w-auto shrink-0")}
           />
           {!collapsed && (
             <div className="flex flex-col overflow-hidden">
-              <span className="text-[15px] font-extrabold leading-tight tracking-wide">
+              <span className="text-[14px] font-extrabold leading-tight tracking-wide">
                 {SCHOOL_NAME}
               </span>
-              <span className="text-[10px] font-medium text-white/50 leading-tight tracking-wider uppercase">
+              <span className="text-[9px] font-medium text-white/50 leading-tight tracking-wider uppercase">
                 School Management System
               </span>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin">
-          <div className="space-y-6">
+        <nav className="flex-1 overflow-y-auto px-2 py-3 scrollbar-thin">
+          <div className="space-y-4">
             {filteredCategories.map((category, catIdx) => (
               <div key={category.label}>
                 {!collapsed && (
-                  <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+                  <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">
                     {category.label}
                   </p>
                 )}
                 {collapsed && catIdx > 0 && (
-                  <Separator className="my-2 bg-white/10" />
+                  <Separator className="my-1.5 bg-white/10" />
                 )}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {category.items.map((item) => (
                     <SidebarItem
                       key={item.href}
