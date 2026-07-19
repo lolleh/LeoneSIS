@@ -39,7 +39,7 @@ function SidebarItem({
     <Link
       href={item.href}
       className={cn(
-        "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200",
+        "group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200",
         isActive
           ? "bg-white/20 text-white shadow-lg shadow-black/10"
           : "text-white/70 hover:bg-white/10 hover:text-white",
@@ -105,7 +105,7 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
           <img
             src="/logo.png"
             alt="LeoneSIS"
-            className={cn("h-14 w-auto shrink-0")}
+            className={cn("h-10 w-auto shrink-0")}
           />
           {!collapsed && (
             <div className="flex flex-col overflow-hidden">
@@ -119,8 +119,8 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
           )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-3 scrollbar-thin">
-          <div className="space-y-4">
+        <nav className="flex-1 overflow-y-auto px-1.5 py-2 scrollbar-thin">
+          <div className="space-y-3">
             {filteredCategories.map((category, catIdx) => (
               <div key={category.label}>
                 {!collapsed && (
@@ -146,13 +146,13 @@ export function Sidebar({ collapsed, onToggle, userRole }: SidebarProps) {
           </div>
         </nav>
 
-        <div className="border-t border-white/10 p-3">
+        <div className="border-t border-white/10 p-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={onToggle}
             className={cn(
-              "w-full text-white/60 hover:text-white hover:bg-white/10",
+              "w-full text-white/60 hover:text-white hover:bg-white/10 h-8",
               collapsed && "justify-center px-2"
             )}
           >
