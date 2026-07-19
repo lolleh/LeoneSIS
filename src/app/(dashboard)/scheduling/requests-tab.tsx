@@ -213,11 +213,10 @@ export default function RequestsTab() {
                     <TableCell>
                       <div>
                         <p className="text-sm">
-                          {request.section?.courseSection?.courseName ??
-                            "—"}
+                          {request.courseSection?.course?.name ?? "—"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Section {request.section?.sectionNumber ?? "—"}
+                          {request.courseSection?.name ?? "—"}
                         </p>
                       </div>
                     </TableCell>
@@ -228,8 +227,8 @@ export default function RequestsTab() {
                       {new Date(request.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={STATUS_CONFIG[request.status]?.variant ?? "secondary"}>
-                        {STATUS_CONFIG[request.status]?.label ?? request.status}
+                      <Badge variant={STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG]?.variant ?? "secondary"}>
+                        {STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG]?.label ?? request.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

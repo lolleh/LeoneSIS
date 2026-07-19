@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/client/lib/utils";
 import { Sidebar } from "@/client/components/layout/Sidebar";
 import { Header } from "@/client/components/layout/Header";
 
@@ -26,7 +25,6 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -40,19 +38,15 @@ export function DashboardLayout({
   }, [pathname]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSidebarCollapsed(true);
-      }
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const toggleSidebar = useCallback(() => {
-    setSidebarCollapsed((prev) => !prev);
-  }, []);
+  }, [mobileMenuOpen]);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
@@ -64,26 +58,26 @@ export function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 md:relative md:z-auto",
-          mobileMenuOpen ? "block" : "hidden md:block"
-        )}
-      >
-        {mobileMenuOpen && (
-          <div
-            className="fixed inset-0 z-30 bg-black/50 md:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={toggleSidebar}
-          userRole={user?.role}
-        />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block shrink-0">
+        <Sidebar userRole={user?.role} />
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Mobile sidebar overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-backdrop-in"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 z-10 animate-sidebar-in">
+            <Sidebar userRole={user?.role} />
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header
           onMenuToggle={toggleMobileMenu}
           notificationCount={notificationCount}

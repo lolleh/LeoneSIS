@@ -8,9 +8,10 @@ import {
   Trash2,
   Calendar,
   User,
+  BookOpen,
+  MapPin,
 } from "lucide-react";
 import { api } from "@/client/lib/trpc";
-import { cn } from "@/client/lib/utils";
 import { PageHeader } from "@/client/components/layout/PageHeader";
 import { Button } from "@/client/components/ui/button";
 import { Input } from "@/client/components/ui/input";
@@ -38,18 +39,15 @@ import {
   SelectValue,
 } from "@/client/components/ui/select";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const DAY_VALUES = [1, 2, 3, 4, 5];
-
 const COURSE_COLORS = [
-  "bg-blue-100 border-blue-300 text-blue-900",
-  "bg-emerald-100 border-emerald-300 text-emerald-900",
-  "bg-violet-100 border-violet-300 text-violet-900",
-  "bg-amber-100 border-amber-300 text-amber-900",
-  "bg-rose-100 border-rose-300 text-rose-900",
-  "bg-cyan-100 border-cyan-300 text-cyan-900",
-  "bg-lime-100 border-lime-300 text-lime-900",
-  "bg-fuchsia-100 border-fuchsia-300 text-fuchsia-900",
+  "border-l-blue-500 bg-blue-50",
+  "border-l-emerald-500 bg-emerald-50",
+  "border-l-violet-500 bg-violet-50",
+  "border-l-amber-500 bg-amber-50",
+  "border-l-rose-500 bg-rose-50",
+  "border-l-cyan-500 bg-cyan-50",
+  "border-l-lime-500 bg-lime-50",
+  "border-l-fuchsia-500 bg-fuchsia-50",
 ];
 
 function getCourseColor(courseName: string): string {
@@ -81,9 +79,10 @@ export default function StudentSchedulePage() {
       { enabled: !!selectedStudentId }
     );
 
-  const { data: allSections } = api.course.getSections.useQuery({});
+  const { data: availableSections } =
+    api.scheduling.getAvailableSections.useQuery({});
 
-  const createEntry = api.scheduling.createEntry.useMutation({
+  const createEnrollment = api.scheduling.createEnrollment.useMutation({
     onSuccess: () => {
       utils.scheduling.getStudentSchedule.invalidate({
         studentId: selectedStudentId!,
@@ -93,7 +92,7 @@ export default function StudentSchedulePage() {
     },
   });
 
-  const deleteEntry = api.scheduling.deleteEntry.useMutation({
+  const removeEnrollment = api.scheduling.removeEnrollment.useMutation({
     onSuccess: () => {
       utils.scheduling.getStudentSchedule.invalidate({
         studentId: selectedStudentId!,
@@ -101,28 +100,16 @@ export default function StudentSchedulePage() {
     },
   });
 
-  const periods = Array.from(
-    new Set(schedule?.map((e) => e.periodNumber) ?? [])
-  ).sort((a, b) => a - b);
-
-  const scheduleMap = new Map<string, (typeof schedule extends Array<infer T> ? T : never)>();
-  schedule?.forEach((entry) => {
-    const key = `${entry.dayOfWeek}-${entry.periodNumber}`;
-    scheduleMap.set(key, entry);
-  });
-
   const selectedStudent = students?.students.find(
     (s) => s.id === selectedStudentId
   );
 
   const enrolledSectionIds = new Set(
-    schedule?.map((e) => e.sectionId) ?? []
+    schedule?.map((e) => e.courseSectionId) ?? []
   );
 
-  const availableSections = allSections?.filter(
-    (s) =>
-      !enrolledSectionIds.has(s.id) &&
-      (s._count?.scheduleEntries ?? 0) < s.maxCapacity
+  const filteredAvailable = availableSections?.filter(
+    (s) => !enrolledSectionIds.has(s.id)
   );
 
   return (
@@ -186,11 +173,13 @@ export default function StudentSchedulePage() {
                       </SelectTrigger>
                       <SelectContent>
                         {addDropMode === "add" ? (
-                          availableSections && availableSections.length > 0 ? (
-                            availableSections.map((section) => (
+                          filteredAvailable && filteredAvailable.length > 0 ? (
+                            filteredAvailable.map((section) => (
                               <SelectItem key={section.id} value={section.id}>
-                                {section.courseSection?.courseName ?? "Unknown"}{" "}
-                                — Section {section.sectionNumber}
+                                {section.course?.name ?? "Unknown"} — {section.name}
+                                {section.primaryTeacher
+                                  ? ` (${section.primaryTeacher.firstName} ${section.primaryTeacher.lastName})`
+                                  : ""}
                               </SelectItem>
                             ))
                           ) : (
@@ -199,14 +188,12 @@ export default function StudentSchedulePage() {
                             </SelectItem>
                           )
                         ) : schedule && schedule.length > 0 ? (
-                          schedule.map((entry) => (
+                          schedule.map((enrollment) => (
                             <SelectItem
-                              key={entry.sectionId}
-                              value={entry.sectionId}
+                              key={enrollment.id}
+                              value={enrollment.id}
                             >
-                              {entry.section?.courseSection?.courseName ??
-                                "Unknown"}{" "}
-                              — Section {entry.section?.sectionNumber}
+                              {enrollment.courseSection?.course?.name ?? "Unknown"} — {enrollment.courseSection?.name}
                             </SelectItem>
                           ))
                         ) : (
@@ -231,30 +218,24 @@ export default function StudentSchedulePage() {
                   <Button
                     disabled={
                       !selectedSectionId ||
-                      createEntry.isPending ||
-                      deleteEntry.isPending
+                      createEnrollment.isPending ||
+                      removeEnrollment.isPending
                     }
                     variant={addDropMode === "drop" ? "destructive" : "default"}
                     onClick={() => {
                       if (addDropMode === "add" && selectedStudentId) {
-                        createEntry.mutate({
-                          sectionId: selectedSectionId,
+                        createEnrollment.mutate({
+                          courseSectionId: selectedSectionId,
                           studentId: selectedStudentId,
                         });
                       } else if (
-                        addDropMode === "drop" &&
-                        selectedStudentId
+                        addDropMode === "drop"
                       ) {
-                        const entry = schedule?.find(
-                          (e) => e.sectionId === selectedSectionId
-                        );
-                        if (entry) {
-                          deleteEntry.mutate({ id: entry.id });
-                        }
+                        removeEnrollment.mutate({ id: selectedSectionId });
                       }
                     }}
                   >
-                    {(createEntry.isPending || deleteEntry.isPending) && (
+                    {(createEnrollment.isPending || removeEnrollment.isPending) && (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     )}
                     {addDropMode === "add" ? "Add to Schedule" : "Drop from Schedule"}
@@ -320,14 +301,14 @@ export default function StudentSchedulePage() {
           {scheduleLoading ? (
             <div className="space-y-4">
               <div className="h-8 w-64 rounded bg-muted animate-pulse" />
-              <div className="h-96 rounded-xl bg-muted animate-pulse" />
+              <div className="h-48 rounded-xl bg-muted animate-pulse" />
             </div>
           ) : (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
-                    Weekly Timetable
+                    Enrolled Sections
                     {selectedStudent && (
                       <span className="ml-2 font-normal text-muted-foreground">
                         — {selectedStudent.firstName}{" "}
@@ -336,78 +317,59 @@ export default function StudentSchedulePage() {
                     )}
                   </CardTitle>
                   <Badge variant="secondary">
-                    {schedule?.length ?? 0} class
-                    {(schedule?.length ?? 0) !== 1 ? "es" : ""}
+                    {schedule?.length ?? 0} section
+                    {(schedule?.length ?? 0) !== 1 ? "s" : ""}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                {periods.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
-                      <thead>
-                        <tr>
-                          <th className="w-24 border border-border p-2 text-left font-medium text-muted-foreground">
-                            Period
-                          </th>
-                          {DAYS.map((day) => (
-                            <th
-                              key={day}
-                              className="border border-border p-2 text-center font-medium text-muted-foreground"
-                            >
-                              {day}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {periods.map((period) => (
-                          <tr key={period}>
-                            <td className="border border-border p-2 font-medium text-muted-foreground">
-                              Period {period}
-                            </td>
-                            {DAY_VALUES.map((day) => {
-                              const entry = scheduleMap.get(
-                                `${day}-${period}`
-                              );
-                              return (
-                                <td
-                                  key={day}
-                                  className="border border-border p-1.5"
-                                >
-                                  {entry ? (
-                                    <div
-                                      className={cn(
-                                        "group relative rounded-md border p-2 text-xs",
-                                        getCourseColor(
-                                          entry.section?.courseSection
-                                            ?.courseName ?? ""
-                                        )
-                                      )}
-                                    >
-                                      <p className="font-semibold leading-tight">
-                                        {entry.section?.courseSection
-                                          ?.courseName ?? "Unknown"}
-                                      </p>
-                                      <p className="mt-0.5 opacity-75">
-                                        {entry.section?.teacher?.firstName}{" "}
-                                        {entry.section?.teacher?.lastName}
-                                      </p>
-                                    </div>
-                                  ) : (
-                                    <div className="h-full min-h-[3.5rem] rounded-md bg-muted/30" />
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {schedule && schedule.length > 0 ? (
+                  <div className="space-y-3">
+                    {schedule.map((enrollment) => {
+                      const cs = enrollment.courseSection;
+                      const courseName = cs?.course?.name ?? "Unknown Course";
+                      return (
+                        <div
+                          key={enrollment.id}
+                          className={`rounded-lg border-l-4 p-4 ${getCourseColor(courseName)}`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-semibold">{courseName}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {cs?.name ?? "Section"}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {cs?.course?.code ?? ""}
+                            </Badge>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            {cs?.primaryTeacher && (
+                              <span className="flex items-center gap-1">
+                                <User className="h-3.5 w-3.5" />
+                                {cs.primaryTeacher.firstName}{" "}
+                                {cs.primaryTeacher.lastName}
+                              </span>
+                            )}
+                            {cs?.room && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {cs.room.name}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {cs?.markingPeriod?.name ?? "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="py-12 text-center text-sm text-muted-foreground">
-                    No schedule entries found for this student
+                    No sections enrolled for this student
                   </div>
                 )}
               </CardContent>

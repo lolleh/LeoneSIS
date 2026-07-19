@@ -20,11 +20,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+export interface NavBadge {
+  label: string;
+  variant?: "default" | "warning" | "danger" | "success";
+}
+
 export interface NavItem {
   title: string;
   href: string;
   icon: LucideIcon;
   roles?: string[];
+  badge?: NavBadge;
 }
 
 export interface NavCategory {
@@ -32,44 +38,46 @@ export interface NavCategory {
   items: NavItem[];
 }
 
+export const ALL_ROLES = ["ADMIN", "TEACHER", "PARENT", "STUDENT"] as const;
+
 export const NAV_ITEMS: NavCategory[] = [
   {
     label: "Main",
     items: [
       { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { title: "Students", href: "/students", icon: Users },
-      { title: "Staff", href: "/staff", icon: Users },
-      { title: "Admissions", href: "/admissions", icon: UserPlus },
+      { title: "Students", href: "/students", icon: Users, roles: ["ADMIN", "TEACHER"] },
+      { title: "Staff", href: "/staff", icon: Users, roles: ["ADMIN"] },
+      { title: "Admissions", href: "/admissions", icon: UserPlus, roles: ["ADMIN"], badge: { label: "3", variant: "warning" } },
     ],
   },
   {
     label: "Academic",
     items: [
-      { title: "Courses", href: "/courses", icon: BookOpen },
-      { title: "Sections", href: "/sections", icon: FileText },
-      { title: "Scheduling", href: "/scheduling", icon: Calendar },
-      { title: "Attendance", href: "/attendance", icon: ClipboardCheck },
-      { title: "Grades", href: "/grades", icon: GraduationCap },
-      { title: "Lesson Plans", href: "/lesson-plans", icon: ScrollText },
+      { title: "Courses", href: "/courses", icon: BookOpen, roles: ["ADMIN", "TEACHER"] },
+      { title: "Sections", href: "/sections", icon: FileText, roles: ["ADMIN", "TEACHER"] },
+      { title: "Scheduling", href: "/scheduling", icon: Calendar, roles: ["ADMIN", "TEACHER"] },
+      { title: "Attendance", href: "/attendance", icon: ClipboardCheck, roles: ["ADMIN", "TEACHER"] },
+      { title: "Grades", href: "/grades", icon: GraduationCap, roles: ["ADMIN", "TEACHER", "PARENT", "STUDENT"] },
+      { title: "Lesson Plans", href: "/lesson-plans", icon: ScrollText, roles: ["TEACHER"] },
     ],
   },
   {
     label: "Operations",
     items: [
       { title: "Calendar", href: "/calendar", icon: Calendar },
-      { title: "Notices", href: "/notices", icon: Bell },
-      { title: "Communication", href: "/communication", icon: MessageSquare },
-      { title: "Broadcast", href: "/broadcast", icon: Radio },
-      { title: "Billing & Fees", href: "/billing", icon: CreditCard },
-      { title: "Discipline", href: "/discipline", icon: Swords },
+      { title: "Notices", href: "/notices", icon: Bell, badge: { label: "New", variant: "danger" } },
+      { title: "Communication", href: "/communication", icon: MessageSquare, badge: { label: "5", variant: "default" } },
+      { title: "Broadcast", href: "/broadcast", icon: Radio, roles: ["ADMIN", "TEACHER"] },
+      { title: "Billing & Fees", href: "/billing", icon: CreditCard, roles: ["ADMIN"] },
+      { title: "Discipline", href: "/discipline", icon: Swords, roles: ["ADMIN", "TEACHER"] },
     ],
   },
   {
     label: "System",
     items: [
-      { title: "Reports", href: "/reports", icon: BarChart3 },
-      { title: "Settings", href: "/settings", icon: Settings },
-      { title: "Profiles & RBAC", href: "/settings/profiles", icon: Shield },
+      { title: "Reports", href: "/reports", icon: BarChart3, roles: ["ADMIN", "TEACHER"] },
+      { title: "Settings", href: "/settings", icon: Settings, roles: ["ADMIN"] },
+      { title: "Profiles & RBAC", href: "/settings/profiles", icon: Shield, roles: ["ADMIN"] },
     ],
   },
 ];

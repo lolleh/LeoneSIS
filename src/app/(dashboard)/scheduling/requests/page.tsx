@@ -267,22 +267,16 @@ export default function ScheduleRequestsPage() {
                         {request.student?.firstName}{" "}
                         {request.student?.lastName}
                       </div>
-                      {request.student?.studentId && (
-                        <div className="text-xs text-muted-foreground">
-                          ID: {request.student.studentId}
-                        </div>
-                      )}
                     </TableCell>
                     <TableCell>
                       <div>
                         <p className="text-sm font-medium">
-                          {request.section?.courseSection?.courseName ??
-                            "—"}
+                          {request.courseSection?.course?.name ?? "—"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Section {request.section?.sectionNumber ?? "—"} •{" "}
-                          {request.section?.teacher?.firstName}{" "}
-                          {request.section?.teacher?.lastName}
+                          {request.courseSection?.name ?? "—"} •{" "}
+                          {request.courseSection?.primaryTeacher?.firstName}{" "}
+                          {request.courseSection?.primaryTeacher?.lastName}
                         </p>
                       </div>
                     </TableCell>
@@ -290,20 +284,15 @@ export default function ScheduleRequestsPage() {
                       <Badge variant="outline">{request.requestType}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {request.requestedBy
-                        ? `${request.requestedBy.firstName} ${request.requestedBy.lastName}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
                       {new Date(request.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          STATUS_CONFIG[request.status]?.variant ?? "secondary"
+                          STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG]?.variant ?? "secondary"
                         }
                       >
-                        {STATUS_CONFIG[request.status]?.label ??
+                        {STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG]?.label ??
                           request.status}
                       </Badge>
                     </TableCell>

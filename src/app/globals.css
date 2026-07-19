@@ -184,6 +184,43 @@ body {
   );
 }
 
+@keyframes sidebar-slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes sidebar-slide-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes content-fade-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-sidebar-in {
+  animation: sidebar-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-in {
+  animation: backdrop-fade-in 0.2s ease-out forwards;
+}
+
+.animate-content-in {
+  animation: content-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .stat-card-students {
   background: linear-gradient(135deg, hsl(239 84% 97%) 0%, hsl(239 84% 93%) 100%);
   border-left: 4px solid hsl(239 84% 67%);

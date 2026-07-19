@@ -130,6 +130,7 @@ export const studentRouter = router({
             orderBy: { createdAt: "desc" },
           },
           familyMembers: true,
+          studentIds: true,
           documents: {
             orderBy: { createdAt: "desc" },
           },
@@ -137,8 +138,9 @@ export const studentRouter = router({
             include: {
               transactions: {
                 orderBy: { createdAt: "desc" },
-                take: 20,
+                take: 50,
               },
+              waivers: true,
             },
           },
           courseSectionEnrollments: {
@@ -151,6 +153,41 @@ export const studentRouter = router({
                 },
               },
             },
+          },
+          comments: {
+            include: {
+              user: {
+                select: { id: true, name: true },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          notes: {
+            include: {
+              user: {
+                select: { id: true, name: true },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          siblings: {
+            include: {
+              student: {
+                select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
+              },
+            },
+          },
+          behaviorIncidents: {
+            include: {
+              behaviorCategory: true,
+              reportedBy: {
+                select: { id: true, firstName: true, lastName: true },
+              },
+            },
+            orderBy: { incidentDate: "desc" },
+          },
+          sponsorships: {
+            orderBy: { createdAt: "desc" },
           },
         },
       });
@@ -498,6 +535,296 @@ export const studentRouter = router({
         });
 
         return newEnrollment;
+      });
+    }),
+
+  getAttendanceSummary: protectedProcedure
+    .input(z.object({ studentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const student = await ctx.db.student.findFirst({
+        where: { id: input.studentId, schoolId: ctx.schoolId },
+      });
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Student not found",
+        });
+      }
+
+      const records = await ctx.db.attendanceRecord.findMany({
+        where: { studentId: input.studentId },
+        include: { attendanceCode: true },
+      });
+
+      const total = records.length;
+      const present = records.filter((r) => r.isPresent).length;
+      const absent = records.filter((r) => r.attendanceCode?.countsAsAbsent).length;
+      const tardy = records.filter((r) => r.attendanceCode?.countsAsTardy).length;
+      const attendanceRate = total > 0 ? ((present / total) * 100).toFixed(1) : "0.0";
+
+      return { total, present, absent, tardy, attendanceRate };
+    }),
+
+  getGradesSummary: protectedProcedure
+    .input(z.object({ studentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const student = await ctx.db.student.findFirst({
+        where: { id: input.studentId, schoolId: ctx.schoolId },
+      });
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Student not found",
+        });
+      }
+
+      const enrollments = await ctx.db.courseSectionEnrollment.findMany({
+        where: { studentId: input.studentId, isActive: true },
+        include: {
+          courseSection: {
+            include: { course: true },
+          },
+        },
+      });
+
+      const grades = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          const entries = await ctx.db.gradebookEntry.findMany({
+            where: { studentId: input.studentId },
+            include: { assignment: { where: { courseSectionId: enrollment.courseSectionId } } },
+          });
+
+          const gradedEntries = entries.filter((e) => e.assignment?.isGraded && e.score !== null);
+          const totalScore = gradedEntries.reduce((sum, e) => sum + Number(e.score ?? 0), 0);
+          const totalMax = gradedEntries.reduce((sum, e) => sum + Number(e.assignment?.maxScore ?? 100), 0);
+          const average = totalMax > 0 ? (totalScore / totalMax) * 100 : null;
+
+          return {
+            courseSectionId: enrollment.courseSectionId,
+            courseName: enrollment.courseSection.course.name,
+            sectionName: enrollment.courseSection.name,
+            average,
+            gradedCount: gradedEntries.length,
+          };
+        })
+      );
+
+      const reportCards = await ctx.db.reportCard.findMany({
+        where: { studentId: input.studentId },
+        orderBy: { generatedAt: "desc" },
+        take: 4,
+      });
+
+      return { grades, reportCards };
+    }),
+
+  addComment: protectedProcedure
+    .input(
+      z.object({
+        studentId: z.string().uuid(),
+        comment: z.string().min(1),
+        category: z.string().optional(),
+        isInternal: z.boolean().default(true),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const student = await ctx.db.student.findFirst({
+        where: { id: input.studentId, schoolId: ctx.schoolId },
+      });
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Student not found",
+        });
+      }
+
+      return ctx.db.studentComment.create({
+        data: {
+          studentId: input.studentId,
+          userId: ctx.user!.id,
+          comment: input.comment,
+          category: input.category,
+          isInternal: input.isInternal,
+        },
+      });
+    }),
+
+  deleteComment: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.studentComment.delete({
+        where: { id: input.id },
+      });
+    }),
+
+  addNote: protectedProcedure
+    .input(
+      z.object({
+        studentId: z.string().uuid(),
+        noteType: z.string().min(1),
+        subject: z.string().optional(),
+        body: z.string().min(1),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const student = await ctx.db.student.findFirst({
+        where: { id: input.studentId, schoolId: ctx.schoolId },
+      });
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Student not found",
+        });
+      }
+
+      return ctx.db.studentNote.create({
+        data: {
+          studentId: input.studentId,
+          userId: ctx.user!.id,
+          noteType: input.noteType,
+          subject: input.subject,
+          body: input.body,
+        },
+      });
+    }),
+
+  deleteNote: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.studentNote.delete({
+        where: { id: input.id },
+      });
+    }),
+
+  addSibling: protectedProcedure
+    .input(z.object({ studentId: z.string().uuid(), siblingStudentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.studentId === input.siblingStudentId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot add self as sibling",
+        });
+      }
+
+      const siblingStudent = await ctx.db.student.findFirst({
+        where: { id: input.siblingStudentId, schoolId: ctx.schoolId },
+      });
+
+      if (!siblingStudent) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sibling student not found",
+        });
+      }
+
+      const existing = await ctx.db.studentSibling.findUnique({
+        where: {
+          studentId_siblingStudentId: {
+            studentId: input.studentId,
+            siblingStudentId: input.siblingStudentId,
+          },
+        },
+      });
+
+      if (existing) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Sibling relationship already exists",
+        });
+      }
+
+      return ctx.db.studentSibling.create({
+        data: {
+          studentId: input.studentId,
+          siblingStudentId: input.siblingStudentId,
+        },
+      });
+    }),
+
+  removeSibling: protectedProcedure
+    .input(z.object({ studentId: z.string().uuid(), siblingStudentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.studentSibling.delete({
+        where: {
+          studentId_siblingStudentId: {
+            studentId: input.studentId,
+            siblingStudentId: input.siblingStudentId,
+          },
+        },
+      });
+    }),
+
+  searchForSibling: protectedProcedure
+    .input(z.object({ search: z.string().min(1), excludeStudentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.student.findMany({
+        where: {
+          schoolId: ctx.schoolId,
+          id: { not: input.excludeStudentId },
+          OR: [
+            { firstName: { contains: input.search, mode: "insensitive" as const } },
+            { lastName: { contains: input.search, mode: "insensitive" as const } },
+          ],
+        },
+        include: {
+          enrollments: {
+            where: { status: "ACTIVE" },
+            include: { gradeLevel: true },
+            take: 1,
+          },
+        },
+        take: 20,
+      });
+    }),
+
+  updateMedical: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        bloodType: z.string().optional().nullable(),
+        allergies: z.array(z.string()).optional().nullable(),
+        medications: z.array(z.string()).optional().nullable(),
+        healthConditions: z.array(z.string()).optional().nullable(),
+        immunizations: z.array(z.object({ name: z.string(), date: z.string() })).optional().nullable(),
+        doctorName: z.string().optional().nullable(),
+        doctorPhone: z.string().optional().nullable(),
+        insuranceProvider: z.string().optional().nullable(),
+        insurancePolicyNumber: z.string().optional().nullable(),
+        medicalNotes: z.string().optional().nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+
+      const student = await ctx.db.student.findFirst({
+        where: { id, schoolId: ctx.schoolId },
+      });
+
+      if (!student) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Student not found",
+        });
+      }
+
+      return ctx.db.student.update({
+        where: { id },
+        data: {
+          bloodType: data.bloodType,
+          allergies: data.allergies,
+          medications: data.medications,
+          healthConditions: data.healthConditions,
+          immunizations: data.immunizations,
+          doctorName: data.doctorName,
+          doctorPhone: data.doctorPhone,
+          insuranceProvider: data.insuranceProvider,
+          insurancePolicyNumber: data.insurancePolicyNumber,
+          medicalNotes: data.medicalNotes,
+        },
       });
     }),
 });

@@ -45,6 +45,8 @@ model School {
   gradeScales   GradeScale[]
   assignmentTypes AssignmentType[]
   feeAccounts   FeeAccount[]
+  feeStructures FeeStructure[]
+  sponsorships  Sponsorship[]
   messages      Message[]
   notifications Notification[]
   notices       Notice[]
@@ -94,6 +96,9 @@ model User {
   auditLogs     AuditLog[]
   student       Student?
   staff         Staff?
+  studentComments StudentComment[]
+  studentNotes  StudentNote[]
+  staffNotes    StaffNote[]
 
   @@unique([schoolId, username])
   @@unique([schoolId, email])
@@ -165,6 +170,7 @@ model GradeLevel {
   previousGradeLevels GradeLevel[] @relation("GradeLevelChain")
   enrollments   Enrollment[]
   sections      Section[]
+  feeStructures FeeStructure[]
 
   @@unique([schoolId, name])
   @@map("grade_levels")
@@ -365,6 +371,16 @@ model Student {
   is504Eligible Boolean  @default(false) @map("is_504_eligible")
   isSpEd        Boolean  @default(false) @map("is_sp_ed")
   isLep         Boolean  @default(false) @map("is_lep")
+  bloodType     String?  @map("blood_type")
+  allergies     Json?    @map("allergies")
+  medications   Json?    @map("medications")
+  healthConditions Json? @map("health_conditions")
+  immunizations Json?    @map("immunizations")
+  doctorName    String?  @map("doctor_name")
+  doctorPhone   String?  @map("doctor_phone")
+  insuranceProvider String? @map("insurance_provider")
+  insurancePolicyNumber String? @map("insurance_policy_number")
+  medicalNotes  String?  @map("medical_notes")
   portalAccess  Boolean  @default(true) @map("portal_access")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -384,6 +400,8 @@ model Student {
   reportCards   ReportCard[]
   transcript    Transcript?
   feeAccount    FeeAccount?
+  feeAssignments FeeStructureAssignment[]
+  sponsorships  Sponsorship[]
   behaviorIncidents BehaviorIncident[]
   scheduleRequests ScheduleRequest[]
   comments      StudentComment[]
@@ -1131,6 +1149,8 @@ model FeeAccount {
   school        School   @relation(fields: [schoolId], references: [id])
   student       Student  @relation(fields: [studentId], references: [id])
   transactions  FeeTransaction[]
+  assignments   FeeStructureAssignment[]
+  waivers       SponsorshipWaiver[]
 
   @@map("fee_accounts")
 }
@@ -1159,6 +1179,90 @@ enum TransactionType {
   CREDIT
   REFUND
   ADJUSTMENT
+  SPONSORSHIP_WAIVER
+}
+
+enum FeeTarget {
+  STUDENT
+  GRADE
+  PROGRAM
+  SCHOOL_WIDE
+}
+
+model FeeStructure {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  name          String
+  description   String?
+  amount        Decimal
+  feeType       String   @map("fee_type")         // tuition, lab, activity, transport, etc.
+  target        FeeTarget @default(STUDENT)
+  targetGradeLevelId String? @map("target_grade_level_id") // for GRADE target
+  targetProgramId String? @map("target_program_id")       // for PROGRAM target
+  academicYear  String   @map("academic_year")
+  dueDate       DateTime? @map("due_date")
+  isRecurring   Boolean  @default(false) @map("is_recurring")
+  recurringInterval String? @map("recurring_interval") // monthly, termly, yearly
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+  gradeLevel    GradeLevel? @relation(fields: [targetGradeLevelId], references: [id])
+  assignments   FeeStructureAssignment[]
+
+  @@map("fee_structures")
+}
+
+model FeeStructureAssignment {
+  id            String   @id @default(uuid())
+  feeStructureId String @map("fee_structure_id")
+  studentId     String   @map("student_id")
+  accountId     String?  @map("account_id")
+  amount        Decimal
+  status        String   @default("active") // active, waived, paid
+  assignedAt    DateTime @default(now()) @map("assigned_at")
+
+  feeStructure  FeeStructure @relation(fields: [feeStructureId], references: [id])
+  student       Student   @relation(fields: [studentId], references: [id])
+  account       FeeAccount? @relation(fields: [accountId], references: [id])
+
+  @@map("fee_structure_assignments")
+}
+
+model Sponsorship {
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  studentId     String   @map("student_id")
+  sponsorName   String   @map("sponsor_name")
+  sponsorType   String   @map("sponsor_type")   // scholarship, government, NGO, individual, corporate
+  amount        Decimal
+  description   String?
+  startDate     DateTime @map("start_date")
+  endDate       DateTime? @map("end_date")
+  isActive      Boolean  @default(true) @map("is_active")
+  appliedTo     String   @default("balance")    // balance, specific_fee
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  school        School   @relation(fields: [schoolId], references: [id])
+  student       Student  @relation(fields: [studentId], references: [id])
+  waivers       SponsorshipWaiver[]
+
+  @@map("sponsorships")
+}
+
+model SponsorshipWaiver {
+  id            String   @id @default(uuid())
+  sponsorshipId String   @map("sponsorship_id")
+  accountId     String   @map("account_id")
+  transactionId String?  @map("transaction_id")
+  amount        Decimal
+  appliedAt     DateTime @default(now()) @map("applied_at")
+  notes         String?
+
+  sponsorship   Sponsorship @relation(fields: [sponsorshipId], references: [id])
+  account       FeeAccount  @relation(fields: [accountId], references: [id])
+
+  @@map("sponsorship_waivers")
 }
 
 // ============================================
@@ -1351,6 +1455,7 @@ model StudentComment {
   updatedAt     DateTime @default(now()) @map("updated_at")
 
   student       Student  @relation(fields: [studentId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 
   @@map("student_comments")
 }
@@ -1369,6 +1474,7 @@ model StudentNote {
   updatedAt     DateTime @default(now()) @map("updated_at")
 
   student       Student  @relation(fields: [studentId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 
   @@map("student_notes")
 }
@@ -1395,6 +1501,7 @@ model StaffNote {
   createdAt     DateTime @default(now()) @map("created_at")
 
   staff         Staff    @relation(fields: [staffId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 
   @@map("staff_notes")
 }
