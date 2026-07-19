@@ -1,65 +1,71 @@
-import { PrismaClient, UserRole, MarkingPeriodType, EnrollmentStatus } from "@prisma/client";
+import { PrismaClient, UserRole, MarkingPeriodType, EnrollmentStatus, SchoolType, GradeDivision } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Sierra Leone Schools - mix of school types
 const schools = [
   {
-    name: "Holy Trinity Secondary School",
-    shortName: "HTSS",
-    subdomain: "holy-trinity-kenema",
-    address: "27 Hangha Road",
-    city: "Kenema",
-    state: "Eastern Province",
+    name: "Freetown Municipal Primary School",
+    shortName: "FMPS",
+    subdomain: "freetown-municipal",
+    schoolType: SchoolType.PRIMARY as const,
+    address: "Siaka Stevens Street",
+    city: "Freetown",
+    state: "Western Area",
     country: "SL",
     phone: "+232-76-123456",
-    email: "admin@holytrinity.edu.sl",
-    website: "https://holytrinity.edu.sl",
+    email: "admin@fmps.edu.sl",
+    website: "https://fmps.edu.sl",
+    timezone: "Africa/Freetown",
+  },
+  {
+    name: "Bo Government Junior Secondary School",
+    shortName: "BGJSS",
+    subdomain: "bo-jss",
+    schoolType: SchoolType.JUNIOR_SECONDARY as const,
+    address: "Boom Road",
+    city: "Bo",
+    state: "Southern Province",
+    country: "SL",
+    phone: "+232-77-234567",
+    email: "admin@bgjss.edu.sl",
+    website: "https://bgjss.edu.sl",
     timezone: "Africa/Freetown",
   },
   {
     name: "Sierra Leone Grammar School",
     shortName: "SLGS",
     subdomain: "grammar-school",
+    schoolType: SchoolType.SENIOR_SECONDARY as const,
     address: "17 Sanders Street",
     city: "Freetown",
     state: "Western Area",
     country: "SL",
-    phone: "+232-77-234567",
+    phone: "+232-78-345678",
     email: "admin@slgs.edu.sl",
     website: "https://slgs.edu.sl",
     timezone: "Africa/Freetown",
   },
   {
-    name: "St. Edward's Secondary School",
-    shortName: "SESS",
-    subdomain: "st-edwards",
-    address: "8 Wellington Street",
-    city: "Freetown",
-    state: "Western Area",
-    country: "SL",
-    phone: "+232-78-345678",
-    email: "admin@stedwards.edu.sl",
-    website: "https://stedwards.edu.sl",
-    timezone: "Africa/Freetown",
-  },
-  {
-    name: "Government Secondary School Bo",
-    shortName: "GSSB",
-    subdomain: "govt-secondary-bo",
-    address: "34 Boom Road",
-    city: "Bo",
-    state: "Southern Province",
+    name: "Holy Trinity Secondary School",
+    shortName: "HTSS",
+    subdomain: "holy-trinity-kenema",
+    schoolType: SchoolType.SENIOR_SECONDARY as const,
+    address: "27 Hangha Road",
+    city: "Kenema",
+    state: "Eastern Province",
     country: "SL",
     phone: "+232-79-456789",
-    email: "admin@gssbo.edu.sl",
-    website: "https://gssbo.edu.sl",
+    email: "admin@htss.edu.sl",
+    website: "https://htss.edu.sl",
     timezone: "Africa/Freetown",
   },
   {
     name: "Ahmadiyya Muslim Secondary School",
     shortName: "AMSS",
     subdomain: "ahmadiyya-muslim",
+    schoolType: SchoolType.SENIOR_SECONDARY as const,
     address: "12 Lumley Beach Road",
     city: "Freetown",
     state: "Western Area",
@@ -71,6 +77,7 @@ const schools = [
   },
 ];
 
+// Sierra Leonean names
 const maleNames = [
   { first: "Mohamed", last: "Kamara" },
   { first: "Ibrahim", last: "Conteh" },
@@ -84,6 +91,9 @@ const maleNames = [
   { first: "Musa", last: "Kargbo" },
   { first: "Foday", last: "Bah" },
   { first: "Sulaiman", last: "Sawaneh" },
+  { first: "Emmanuel", last: "Thomas" },
+  { first: "Samuel", last: "Johnson" },
+  { first: "Joseph", last: "Smith" },
 ];
 
 const femaleNames = [
@@ -99,31 +109,121 @@ const femaleNames = [
   { first: "Rugiatu", last: "Kargbo" },
   { first: "Kadija", last: "Bah" },
   { first: "Aisha", last: "Sawaneh" },
-];
-
-const subjects = [
-  { name: "Mathematics", code: "MATH" },
-  { name: "English Language", code: "ENG" },
-  { name: "Biology", code: "BIO" },
-  { name: "Physics", code: "PHY" },
-  { name: "Chemistry", code: "CHEM" },
-  { name: "Geography", code: "GEO" },
-  { name: "History", code: "HIST" },
-  { name: "Agricultural Science", code: "AGRI" },
+  { first: "Grace", last: "Thomas" },
+  { first: "Mercy", last: "Johnson" },
+  { first: "Patricia", last: "Smith" },
 ];
 
 const cities = ["Freetown", "Bo", "Kenema", "Makeni", "Koidu"];
 
+// Sierra Leone 6-3-3-4 Education System
+// Primary: Grades 1-6 (6 years)
+// JSS: Grades 7-9 (3 years) - Junior Secondary
+// SSS: Grades 10-12 (3 years) - Senior Secondary
+
+function getGradeLevelsForSchoolType(schoolType: SchoolType) {
+  switch (schoolType) {
+    case SchoolType.PRIMARY:
+      return [
+        { name: "Grade 1", code: "P1", division: GradeDivision.PRIMARY, sortOrder: 0 },
+        { name: "Grade 2", code: "P2", division: GradeDivision.PRIMARY, sortOrder: 1 },
+        { name: "Grade 3", code: "P3", division: GradeDivision.PRIMARY, sortOrder: 2 },
+        { name: "Grade 4", code: "P4", division: GradeDivision.PRIMARY, sortOrder: 3 },
+        { name: "Grade 5", code: "P5", division: GradeDivision.PRIMARY, sortOrder: 4 },
+        { name: "Grade 6", code: "P6", division: GradeDivision.PRIMARY, sortOrder: 5 },
+      ];
+    case SchoolType.JUNIOR_SECONDARY:
+      return [
+        { name: "Grade 7", code: "JSS1", division: GradeDivision.JSS, sortOrder: 0 },
+        { name: "Grade 8", code: "JSS2", division: GradeDivision.JSS, sortOrder: 1 },
+        { name: "Grade 9", code: "JSS3", division: GradeDivision.JSS, sortOrder: 2 },
+      ];
+    case SchoolType.SENIOR_SECONDARY:
+      return [
+        { name: "Grade 10", code: "SSS1", division: GradeDivision.SSS, sortOrder: 0 },
+        { name: "Grade 11", code: "SSS2", division: GradeDivision.SSS, sortOrder: 1 },
+        { name: "Grade 12", code: "SSS3", division: GradeDivision.SSS, sortOrder: 2 },
+      ];
+    case SchoolType.COMBINED:
+    default:
+      return [
+        { name: "Grade 1", code: "P1", division: GradeDivision.PRIMARY, sortOrder: 0 },
+        { name: "Grade 2", code: "P2", division: GradeDivision.PRIMARY, sortOrder: 1 },
+        { name: "Grade 3", code: "P3", division: GradeDivision.PRIMARY, sortOrder: 2 },
+        { name: "Grade 4", code: "P4", division: GradeDivision.PRIMARY, sortOrder: 3 },
+        { name: "Grade 5", code: "P5", division: GradeDivision.PRIMARY, sortOrder: 4 },
+        { name: "Grade 6", code: "P6", division: GradeDivision.PRIMARY, sortOrder: 5 },
+        { name: "Grade 7", code: "JSS1", division: GradeDivision.JSS, sortOrder: 6 },
+        { name: "Grade 8", code: "JSS2", division: GradeDivision.JSS, sortOrder: 7 },
+        { name: "Grade 9", code: "JSS3", division: GradeDivision.JSS, sortOrder: 8 },
+        { name: "Grade 10", code: "SSS1", division: GradeDivision.SSS, sortOrder: 9 },
+        { name: "Grade 11", code: "SSS2", division: GradeDivision.SSS, sortOrder: 10 },
+        { name: "Grade 12", code: "SSS3", division: GradeDivision.SSS, sortOrder: 11 },
+      ];
+  }
+}
+
+function getSubjectsForSchoolType(schoolType: SchoolType) {
+  // Core subjects for all levels
+  const core = [
+    { name: "Mathematics", code: "MATH" },
+    { name: "English Language", code: "ENG" },
+  ];
+
+  switch (schoolType) {
+    case SchoolType.PRIMARY:
+      return [
+        ...core,
+        { name: "Environmental Science", code: "ENV" },
+        { name: "Creative Arts", code: "ARTS" },
+        { name: "Physical Education", code: "PE" },
+        { name: "Religious Studies", code: "REL" },
+        { name: "Social Studies", code: "SOC" },
+        { name: "Krio Language", code: "KRIO" },
+      ];
+    case SchoolType.JUNIOR_SECONDARY:
+      return [
+        ...core,
+        { name: "Biology", code: "BIO" },
+        { name: "Physics", code: "PHY" },
+        { name: "Chemistry", code: "CHEM" },
+        { name: "Geography", code: "GEO" },
+        { name: "History", code: "HIST" },
+        { name: "Agricultural Science", code: "AGRI" },
+        { name: "Computer Studies", code: "COMP" },
+        { name: "Home Economics", code: "HOME" },
+      ];
+    case SchoolType.SENIOR_SECONDARY:
+      return [
+        ...core,
+        { name: "Biology", code: "BIO" },
+        { name: "Physics", code: "PHY" },
+        { name: "Chemistry", code: "CHEM" },
+        { name: "Geography", code: "GEO" },
+        { name: "History", code: "HIST" },
+        { name: "Agricultural Science", code: "AGRI" },
+        { name: "Economics", code: "ECON" },
+        { name: "Government", code: "GOV" },
+      ];
+    default:
+      return [
+        ...core,
+        { name: "Biology", code: "BIO" },
+        { name: "Physics", code: "PHY" },
+        { name: "Chemistry", code: "CHEM" },
+      ];
+  }
+}
+
 async function main() {
-  console.log("Seeding LeoneSIS database...\n");
+  console.log("Seeding LeoneSIS database (Sierra Leone 6-3-3-4 System)...\n");
 
   const adminPassword = await bcrypt.hash("admin123", 12);
   const teacherPassword = await bcrypt.hash("teacher123", 12);
-
   const currentYear = new Date().getFullYear();
 
   for (const schoolData of schools) {
-    console.log(`\n--- Creating ${schoolData.name} ---`);
+    console.log(`\n--- Creating ${schoolData.name} (${schoolData.schoolType}) ---`);
 
     const school = await prisma.school.create({ data: schoolData });
     console.log(`  School created: ${school.name}`);
@@ -140,7 +240,7 @@ async function main() {
         role: UserRole.ADMIN,
       },
     });
-    console.log(`  Admin created: ${adminUsername} / admin123`);
+    console.log(`  Admin: ${adminUsername} / admin123`);
 
     // Teachers
     const teacherList = [
@@ -162,9 +262,7 @@ async function main() {
         })
       )
     );
-    console.log(`  Teachers created: teacher1/teacher123, teacher2/teacher123, teacher3/teacher123`);
 
-    // Staff
     const staffMembers = await Promise.all(
       teachers.map((t) =>
         prisma.staff.create({
@@ -180,22 +278,35 @@ async function main() {
     );
     console.log(`  Created ${staffMembers.length} teachers`);
 
-    // Grade levels (7-12 for secondary school)
-    const gradeLevels = await Promise.all(
-      ["7", "8", "9", "10", "11", "12"].map((name, index) =>
-        prisma.gradeLevel.create({
-          data: {
-            schoolId: school.id,
-            name,
-            code: `Form ${name}`,
-            sortOrder: index,
-          },
-        })
-      )
-    );
-    console.log(`  Created ${gradeLevels.length} grade levels`);
+    // Grade levels based on school type (6-3-3-4)
+    const gradeLevelData = getGradeLevelsForSchoolType(schoolData.schoolType);
+    const gradeLevels: any[] = [];
 
-    // Marking periods
+    for (let i = 0; i < gradeLevelData.length; i++) {
+      const gl = gradeLevelData[i];
+      const created = await prisma.gradeLevel.create({
+        data: {
+          schoolId: school.id,
+          name: gl.name,
+          code: gl.code,
+          division: gl.division,
+          sortOrder: gl.sortOrder,
+          nextGradeLevelId: undefined, // will set after all created
+        },
+      });
+      gradeLevels.push(created);
+    }
+
+    // Link grade levels in chain
+    for (let i = 0; i < gradeLevels.length - 1; i++) {
+      await prisma.gradeLevel.update({
+        where: { id: gradeLevels[i].id },
+        data: { nextGradeLevelId: gradeLevels[i + 1].id },
+      });
+    }
+    console.log(`  Created ${gradeLevels.length} grade levels (${gradeLevelData[0].division})`);
+
+    // Marking periods (3 terms - Sierra Leone standard)
     const academicYear = await prisma.markingPeriod.create({
       data: {
         schoolId: school.id,
@@ -242,7 +353,7 @@ async function main() {
         sortOrder: 2,
       },
     });
-    console.log("  Created marking periods (3 terms)");
+    console.log("  Created 3 marking periods");
 
     // Rooms
     const rooms = await Promise.all(
@@ -263,14 +374,17 @@ async function main() {
     const program = await prisma.program.create({
       data: {
         schoolId: school.id,
-        name: "WAEC Standard Curriculum",
-        description: "West African Examinations Council standard curriculum",
+        name: schoolData.schoolType === "PRIMARY" ? "Sierra Leone Primary Curriculum" : "WAEC Standard Curriculum",
+        description: schoolData.schoolType === "PRIMARY"
+          ? "Sierra Leone National Primary School Curriculum"
+          : "West African Examinations Council standard curriculum",
       },
     });
 
     // Subjects
+    const subjectData = getSubjectsForSchoolType(schoolData.schoolType);
     const subjectRecords = await Promise.all(
-      subjects.map((data) =>
+      subjectData.map((data) =>
         prisma.subject.create({
           data: {
             schoolId: school.id,
@@ -282,100 +396,41 @@ async function main() {
     );
     console.log(`  Created ${subjectRecords.length} subjects`);
 
-    // Courses
-    const courses = await Promise.all([
-      prisma.course.create({
+    // Courses - create courses for each subject
+    const courses: any[] = [];
+    for (const subj of subjectRecords) {
+      const course = await prisma.course.create({
         data: {
           schoolId: school.id,
-          subjectId: subjectRecords[0].id,
-          name: "Further Mathematics",
-          code: "MATH-201",
-          description: "Advanced mathematics for WASSCE",
+          subjectId: subj.id,
+          name: subj.name,
+          code: subj.code,
+          description: `${subj.name} course`,
           creditHours: 1,
         },
-      }),
-      prisma.course.create({
-        data: {
-          schoolId: school.id,
-          subjectId: subjectRecords[1].id,
-          name: "English Language",
-          code: "ENG-201",
-          description: "English language arts",
-          creditHours: 1,
-        },
-      }),
-      prisma.course.create({
-        data: {
-          schoolId: school.id,
-          subjectId: subjectRecords[2].id,
-          name: "Biology",
-          code: "BIO-201",
-          description: "General biology",
-          creditHours: 1,
-        },
-      }),
-      prisma.course.create({
-        data: {
-          schoolId: school.id,
-          subjectId: subjectRecords[3].id,
-          name: "Physics",
-          code: "PHY-201",
-          description: "General physics",
-          creditHours: 1,
-        },
-      }),
-      prisma.course.create({
-        data: {
-          schoolId: school.id,
-          subjectId: subjectRecords[4].id,
-          name: "Chemistry",
-          code: "CHEM-201",
-          description: "General chemistry",
-          creditHours: 1,
-        },
-      }),
-    ]);
+      });
+      courses.push(course);
+    }
     console.log(`  Created ${courses.length} courses`);
 
-    // Course sections
-    const sections = await Promise.all([
-      prisma.courseSection.create({
+    // Course sections - one per grade level for core subjects
+    const sectionCount = Math.min(gradeLevels.length, courses.length);
+    const sections: any[] = [];
+    for (let i = 0; i < sectionCount; i++) {
+      const section = await prisma.courseSection.create({
         data: {
-          courseId: courses[0].id,
+          courseId: courses[i % courses.length].id,
           schoolId: school.id,
-          name: "Further Maths - Form 10A",
+          name: `${courses[i % courses.length].name} - ${gradeLevels[i].name}A`,
           academicYear: `${currentYear}-${currentYear + 1}`,
           markingPeriodId: term1.id,
-          roomId: rooms[0].id,
-          primaryTeacherId: staffMembers[0].id,
+          roomId: rooms[i % rooms.length].id,
+          primaryTeacherId: staffMembers[i % staffMembers.length].id,
           maxCapacity: 45,
         },
-      }),
-      prisma.courseSection.create({
-        data: {
-          courseId: courses[1].id,
-          schoolId: school.id,
-          name: "English - Form 10B",
-          academicYear: `${currentYear}-${currentYear + 1}`,
-          markingPeriodId: term1.id,
-          roomId: rooms[1].id,
-          primaryTeacherId: staffMembers[1].id,
-          maxCapacity: 45,
-        },
-      }),
-      prisma.courseSection.create({
-        data: {
-          courseId: courses[2].id,
-          schoolId: school.id,
-          name: "Biology - Form 11A",
-          academicYear: `${currentYear}-${currentYear + 1}`,
-          markingPeriodId: term1.id,
-          roomId: rooms[2].id,
-          primaryTeacherId: staffMembers[2].id,
-          maxCapacity: 40,
-        },
-      }),
-    ]);
+      });
+      sections.push(section);
+    }
     console.log(`  Created ${sections.length} course sections`);
 
     // Attendance codes
@@ -384,33 +439,50 @@ async function main() {
         { schoolId: school.id, code: "P", name: "Present", isDefault: true, isPresent: true, sortOrder: 0 },
         { schoolId: school.id, code: "A", name: "Absent", isPresent: false, countsAsAbsent: true, sortOrder: 1 },
         { schoolId: school.id, code: "T", name: "Tardy", isPresent: true, countsAsTardy: true, sortOrder: 2 },
-        { schoolId: school.id, code: "E", name: "Excused", isPresent: false, countsAsAbsent: true, sortOrder: 3 },
+        { schoolId: school.id, code: "E", name: "Excused Absence", isPresent: false, countsAsAbsent: true, sortOrder: 3 },
         { schoolId: school.id, code: "H", name: "Half Day", isPresent: true, sortOrder: 4 },
+        { schoolId: school.id, code: "L", name: "Late", isPresent: true, countsAsTardy: true, sortOrder: 5 },
+        { schoolId: school.id, code: "OE", name: "Out of School Excused", isPresent: false, countsAsAbsent: true, sortOrder: 6 },
       ],
     });
+    console.log("  Created attendance codes");
 
-    // Grade scale
+    // Grade scale (WAEC for secondary, percentage for primary)
     const gradeScale = await prisma.gradeScale.create({
       data: {
         schoolId: school.id,
-        name: "WAEC Grading",
+        name: schoolData.schoolType === "PRIMARY" ? "Primary Grading" : "WAEC Grading",
         isDefault: true,
       },
     });
 
-    await prisma.gradeScaleGrade.createMany({
-      data: [
-        { gradeScaleId: gradeScale.id, letter: "A1", percentageMin: 75, percentageMax: 100, numericValue: 4, isPassing: true, sortOrder: 0 },
-        { gradeScaleId: gradeScale.id, letter: "B2", percentageMin: 70, percentageMax: 74.99, numericValue: 3.5, isPassing: true, sortOrder: 1 },
-        { gradeScaleId: gradeScale.id, letter: "B3", percentageMin: 65, percentageMax: 69.99, numericValue: 3, isPassing: true, sortOrder: 2 },
-        { gradeScaleId: gradeScale.id, letter: "C4", percentageMin: 60, percentageMax: 64.99, numericValue: 2.5, isPassing: true, sortOrder: 3 },
-        { gradeScaleId: gradeScale.id, letter: "C5", percentageMin: 55, percentageMax: 59.99, numericValue: 2, isPassing: true, sortOrder: 4 },
-        { gradeScaleId: gradeScale.id, letter: "C6", percentageMin: 50, percentageMax: 54.99, numericValue: 1.5, isPassing: true, sortOrder: 5 },
-        { gradeScaleId: gradeScale.id, letter: "D7", percentageMin: 45, percentageMax: 49.99, numericValue: 1, isPassing: true, sortOrder: 6 },
-        { gradeScaleId: gradeScale.id, letter: "E8", percentageMin: 40, percentageMax: 44.99, numericValue: 0.5, isPassing: false, sortOrder: 7 },
-        { gradeScaleId: gradeScale.id, letter: "F9", percentageMin: 0, percentageMax: 39.99, numericValue: 0, isPassing: false, sortOrder: 8 },
-      ],
-    });
+    if (schoolData.schoolType === "PRIMARY") {
+      await prisma.gradeScaleGrade.createMany({
+        data: [
+          { gradeScaleId: gradeScale.id, letter: "A", percentageMin: 80, percentageMax: 100, numericValue: 4, isPassing: true, sortOrder: 0 },
+          { gradeScaleId: gradeScale.id, letter: "B", percentageMin: 70, percentageMax: 79.99, numericValue: 3, isPassing: true, sortOrder: 1 },
+          { gradeScaleId: gradeScale.id, letter: "C", percentageMin: 60, percentageMax: 69.99, numericValue: 2, isPassing: true, sortOrder: 2 },
+          { gradeScaleId: gradeScale.id, letter: "D", percentageMin: 50, percentageMax: 59.99, numericValue: 1, isPassing: true, sortOrder: 3 },
+          { gradeScaleId: gradeScale.id, letter: "E", percentageMin: 40, percentageMax: 49.99, numericValue: 0.5, isPassing: false, sortOrder: 4 },
+          { gradeScaleId: gradeScale.id, letter: "F", percentageMin: 0, percentageMax: 39.99, numericValue: 0, isPassing: false, sortOrder: 5 },
+        ],
+      });
+    } else {
+      await prisma.gradeScaleGrade.createMany({
+        data: [
+          { gradeScaleId: gradeScale.id, letter: "A1", percentageMin: 75, percentageMax: 100, numericValue: 4, isPassing: true, sortOrder: 0 },
+          { gradeScaleId: gradeScale.id, letter: "B2", percentageMin: 70, percentageMax: 74.99, numericValue: 3.5, isPassing: true, sortOrder: 1 },
+          { gradeScaleId: gradeScale.id, letter: "B3", percentageMin: 65, percentageMax: 69.99, numericValue: 3, isPassing: true, sortOrder: 2 },
+          { gradeScaleId: gradeScale.id, letter: "C4", percentageMin: 60, percentageMax: 64.99, numericValue: 2.5, isPassing: true, sortOrder: 3 },
+          { gradeScaleId: gradeScale.id, letter: "C5", percentageMin: 55, percentageMax: 59.99, numericValue: 2, isPassing: true, sortOrder: 4 },
+          { gradeScaleId: gradeScale.id, letter: "C6", percentageMin: 50, percentageMax: 54.99, numericValue: 1.5, isPassing: true, sortOrder: 5 },
+          { gradeScaleId: gradeScale.id, letter: "D7", percentageMin: 45, percentageMax: 49.99, numericValue: 1, isPassing: true, sortOrder: 6 },
+          { gradeScaleId: gradeScale.id, letter: "E8", percentageMin: 40, percentageMax: 44.99, numericValue: 0.5, isPassing: false, sortOrder: 7 },
+          { gradeScaleId: gradeScale.id, letter: "F9", percentageMin: 0, percentageMax: 39.99, numericValue: 0, isPassing: false, sortOrder: 8 },
+        ],
+      });
+    }
+    console.log("  Created grade scale");
 
     // Assignment types
     await prisma.assignmentType.createMany({
@@ -418,25 +490,26 @@ async function main() {
         { schoolId: school.id, name: "Homework", weight: 15, sortOrder: 0 },
         { schoolId: school.id, name: "Quiz", weight: 15, sortOrder: 1 },
         { schoolId: school.id, name: "Mid-Term Exam", weight: 30, sortOrder: 2 },
-        { schoolId: school.id, name: "Project", weight: 10, sortOrder: 3 },
+        { schoolId: school.id, name: "Project/Practical", weight: 10, sortOrder: 3 },
         { schoolId: school.id, name: "Final Exam", weight: 30, sortOrder: 4 },
       ],
     });
 
-    // Students
+    // Students - distribute across grade levels
     const studentsCount = 25;
     for (let i = 0; i < studentsCount; i++) {
       const isMale = i % 2 === 0;
       const namePool = isMale ? maleNames : femaleNames;
       const name = namePool[i % namePool.length];
 
-      const gradeIndex = Math.floor(i / 5) % gradeLevels.length;
+      const gradeIndex = i % gradeLevels.length;
       const gradeLevel = gradeLevels[gradeIndex];
 
-      const birthYear = 2008 - gradeIndex;
+      // Age appropriate for grade level
+      const gradeNum = parseInt(gradeLevel.name.replace("Grade ", ""));
+      const birthYear = currentYear - gradeNum - 6;
       const month = ((i * 7) % 12) + 1;
       const day = ((i * 11) % 28) + 1;
-
       const city = cities[i % cities.length];
 
       const student = await prisma.student.create({
@@ -454,7 +527,6 @@ async function main() {
         },
       });
 
-      // Enrollment
       await prisma.enrollment.create({
         data: {
           studentId: student.id,
@@ -496,17 +568,33 @@ async function main() {
         {
           calendarId: calendar.id,
           title: "First Day of Term 1",
-          eventType: "holiday",
+          eventType: "academic",
           startDate: new Date(`${currentYear}-09-01`),
           endDate: new Date(`${currentYear}-09-01`),
           isAllDay: true,
         },
         {
           calendarId: calendar.id,
-          title: "Independence Day",
+          title: "National Independence Day",
           eventType: "holiday",
           startDate: new Date(`${currentYear + 1}-04-27`),
           endDate: new Date(`${currentYear + 1}-04-27`),
+          isAllDay: true,
+        },
+        {
+          calendarId: calendar.id,
+          title: "Christmas Day",
+          eventType: "holiday",
+          startDate: new Date(`${currentYear}-12-25`),
+          endDate: new Date(`${currentYear}-12-25`),
+          isAllDay: true,
+        },
+        {
+          calendarId: calendar.id,
+          title: "New Year Day",
+          eventType: "holiday",
+          startDate: new Date(`${currentYear + 1}-01-01`),
+          endDate: new Date(`${currentYear + 1}-01-01`),
           isAllDay: true,
         },
         {
@@ -519,42 +607,27 @@ async function main() {
         },
         {
           calendarId: calendar.id,
-          title: "Eid al-Adha",
-          eventType: "holiday",
-          startDate: new Date(`${currentYear + 1}-06-06`),
-          endDate: new Date(`${currentYear + 1}-06-07`),
-          isAllDay: true,
-        },
-        {
-          calendarId: calendar.id,
-          title: "Christmas Day",
-          eventType: "holiday",
-          startDate: new Date(`${currentYear + 1}-12-25`),
-          endDate: new Date(`${currentYear + 1}-12-25`),
-          isAllDay: true,
-        },
-        {
-          calendarId: calendar.id,
-          title: "New Year Day",
-          eventType: "holiday",
-          startDate: new Date(`${currentYear + 1}-01-01`),
-          endDate: new Date(`${currentYear + 1}-01-01`),
+          title: "End of Term 1",
+          eventType: "academic",
+          startDate: new Date(`${currentYear}-12-15`),
+          endDate: new Date(`${currentYear}-12-15`),
           isAllDay: true,
         },
       ],
     });
-
     console.log("  Created calendar events");
   }
 
   console.log("\n\n========================================");
   console.log("Seed completed successfully!");
+  console.log("Sierra Leone 6-3-3-4 Education System");
   console.log("========================================\n");
 
   for (const schoolData of schools) {
-    console.log(`\n${schoolData.name} (${schoolData.subdomain}):`);
-    console.log(`  Admin: ${schoolData.email} / admin123`);
-    console.log(`  URL: http://localhost:3000/login?school=${schoolData.subdomain}`);
+    console.log(`${schoolData.name} (${schoolData.schoolType}):`);
+    console.log(`  Admin: ${schoolData.shortName.toLowerCase()}admin / admin123`);
+    console.log(`  URL: http://localhost:3000`);
+    console.log("");
   }
 }
 

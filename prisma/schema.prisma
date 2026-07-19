@@ -16,6 +16,7 @@ model School {
   name          String
   shortName     String   @map("short_name")
   subdomain     String   @unique
+  schoolType    SchoolType @default(COMBINED) @map("school_type")
   logo          String?
   address       String?
   city          String?
@@ -25,8 +26,8 @@ model School {
   phone         String?
   email         String?
   website       String?
-  timezone      String   @default("America/New_York")
-  dateFormat    String   @default("MM/DD/YYYY") @map("date_format")
+  timezone      String   @default("Africa/Freetown")
+  dateFormat    String   @default("DD/MM/YYYY") @map("date_format")
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -107,6 +108,19 @@ enum UserRole {
   STUDENT
 }
 
+enum SchoolType {
+  PRIMARY
+  JUNIOR_SECONDARY
+  SENIOR_SECONDARY
+  COMBINED
+}
+
+enum GradeDivision {
+  PRIMARY
+  JSS
+  SSS
+}
+
 model Profile {
   id            String   @id @default(uuid())
   name          String
@@ -140,6 +154,7 @@ model GradeLevel {
   schoolId      String   @map("school_id")
   name          String
   code          String?
+  division      GradeDivision
   sortOrder     Int      @default(0) @map("sort_order")
   nextGradeLevelId String? @map("next_grade_level_id")
   equivalencies GradeLevelEquivalency[]
