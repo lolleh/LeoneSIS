@@ -611,6 +611,8 @@ model Subject {
   name          String
   code          String?
   description   String?
+  category      String?  @default("core") // core, applied, everyday (SSS streams)
+  stream        String?  // SSS specialist stream name
   isActive      Boolean  @default(true) @map("is_active")
 
   school        School   @relation(fields: [schoolId], references: [id])

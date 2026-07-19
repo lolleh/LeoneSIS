@@ -164,54 +164,146 @@ function getGradeLevelsForSchoolType(schoolType: SchoolType) {
 }
 
 function getSubjectsForSchoolType(schoolType: SchoolType) {
-  // Core subjects for all levels
-  const core = [
-    { name: "Mathematics", code: "MATH" },
-    { name: "English Language", code: "ENG" },
+  // Primary subjects (Stage 1-3 of Basic Education)
+  const primarySubjects = [
+    { name: "English Language", code: "ENG", category: "core" },
+    { name: "Mathematics", code: "MATH", category: "core" },
+    { name: "Environmental Science", code: "ENV", category: "core" },
+    { name: "Social Studies", code: "SOC", category: "core" },
+    { name: "Religious & Moral Education", code: "RME", category: "core" },
+    { name: "Agricultural Science", code: "AGRI", category: "core" },
+    { name: "Creative Arts", code: "ARTS", category: "core" },
+    { name: "Physical Health Education", code: "PHE", category: "core" },
+    { name: "Technology", code: "TECH", category: "core" },
+    { name: "Home Economics", code: "HOME", category: "core" },
+    { name: "Business Studies", code: "BIZ", category: "core" },
+    { name: "Krio Language", code: "KRIO", category: "core" },
+  ];
+
+  // JSS subjects - BECE Exam subjects (Form 1-3)
+  const jssSubjects = [
+    { name: "English Language", code: "ENG", category: "core" },
+    { name: "Mathematics", code: "MATH", category: "core" },
+    { name: "Integrated Science", code: "SCI", category: "core" },
+    { name: "Social Studies", code: "SOC", category: "core" },
+    { name: "Religious & Moral Education", code: "RME", category: "core" },
+    { name: "Agricultural Science", code: "AGRI", category: "core" },
+    { name: "Business Studies", code: "BIZ", category: "core" },
+    { name: "Home Economics", code: "HOME", category: "core" },
+    { name: "Technology", code: "TECH", category: "core" },
+    { name: "Physical Health Education", code: "PHE", category: "core" },
+  ];
+
+  // SSS subjects - New MBSSE Curriculum (5 Specialist Streams)
+  // Each stream has Core, Applied, and Everyday subjects
+  const sssSubjects = [
+    // === SCIENCES & TECHNOLOGIES STREAM ===
+    // Core
+    { name: "Integrated Science", code: "SCI101", category: "core", stream: "Sciences & Technologies" },
+    { name: "Biology", code: "BIO", category: "core", stream: "Sciences & Technologies" },
+    { name: "Chemistry", code: "CHEM", category: "core", stream: "Sciences & Technologies" },
+    { name: "Physics", code: "PHY", category: "core", stream: "Sciences & Technologies" },
+    { name: "Computer Science", code: "CS", category: "core", stream: "Sciences & Technologies" },
+    { name: "Agricultural Science", code: "AGRI101", category: "core", stream: "Sciences & Technologies" },
+    { name: "Information & Communication Technology", code: "ICT", category: "core", stream: "Sciences & Technologies" },
+    // Applied
+    { name: "Environmental Science", code: "ENV101", category: "applied", stream: "Sciences & Technologies" },
+    { name: "Health Science", code: "HLTH", category: "applied", stream: "Sciences & Technologies" },
+    { name: "Food Security", code: "FOOD", category: "applied", stream: "Sciences & Technologies" },
+    { name: "Engineering Science", code: "ENG101", category: "applied", stream: "Sciences & Technologies" },
+    { name: "Robotics", code: "ROBO", category: "applied", stream: "Sciences & Technologies" },
+    { name: "Climate Change Awareness, Preparedness & Resilience", code: "CCAR", category: "applied", stream: "Sciences & Technologies" },
+    // Everyday
+    { name: "Adolescent Health & Life Skills", code: "AHLS", category: "everyday", stream: "Sciences & Technologies" },
+    { name: "Computer Literacy", code: "CLIT", category: "everyday", stream: "Sciences & Technologies" },
+    { name: "Popular Science", code: "PSCI", category: "everyday", stream: "Sciences & Technologies" },
+
+    // === MATHEMATICS & NUMERACY STREAM ===
+    // Core
+    { name: "Fundamentals of Mathematics", code: "MATH101", category: "core", stream: "Mathematics & Numeracy" },
+    { name: "Further Mathematics", code: "FMATH", category: "core", stream: "Mathematics & Numeracy" },
+    { name: "Calculus", code: "CALC", category: "core", stream: "Mathematics & Numeracy" },
+    { name: "Statistics & Probability", code: "STAT", category: "core", stream: "Mathematics & Numeracy" },
+    // Applied
+    { name: "Mathematics for Business & Enterprise", code: "MBE", category: "applied", stream: "Mathematics & Numeracy" },
+    { name: "Mathematics Applications for Coding", code: "MAC", category: "applied", stream: "Mathematics & Numeracy" },
+    { name: "Mathematics for STEAM", code: "MSTEAM", category: "applied", stream: "Mathematics & Numeracy" },
+    { name: "Computer Mathematics", code: "CMATH", category: "applied", stream: "Mathematics & Numeracy" },
+    // Everyday
+    { name: "Introductory Statistics & Probability", code: "ISP", category: "everyday", stream: "Mathematics & Numeracy" },
+    { name: "Functional Mathematics", code: "FUMATH", category: "everyday", stream: "Mathematics & Numeracy" },
+
+    // === LANGUAGES & LITERATURES STREAM ===
+    // Core
+    { name: "English Literature", code: "ELIT", category: "core", stream: "Languages & Literatures" },
+    { name: "African Literature", code: "ALIT", category: "core", stream: "Languages & Literatures" },
+    { name: "Sierra Leone Literature", code: "SLLIT", category: "core", stream: "Languages & Literatures" },
+    { name: "French as a Foreign Language", code: "FREN", category: "core", stream: "Languages & Literatures" },
+    { name: "Sierra Leone Languages (Mende, Krim, Temne, Krio)", code: "SLLANG", category: "core", stream: "Languages & Literatures" },
+    // Applied
+    { name: "Creative Writing", code: "CRWR", category: "applied", stream: "Languages & Literatures" },
+    { name: "Business English", code: "BENG", category: "applied", stream: "Languages & Literatures" },
+    { name: "French for Tourism", code: "FTOU", category: "applied", stream: "Languages & Literatures" },
+    { name: "Technical Writing", code: "TECW", category: "applied", stream: "Languages & Literatures" },
+    { name: "English for STEAMM", code: "ESTEAM", category: "applied", stream: "Languages & Literatures" },
+    { name: "French for Business & Marketing", code: "FBM", category: "applied", stream: "Languages & Literatures" },
+    // Everyday
+    { name: "Everyday Basic French", code: "EBF", category: "everyday", stream: "Languages & Literatures" },
+    { name: "Popular Literature Appreciation", code: "PLA", category: "everyday", stream: "Languages & Literatures" },
+    { name: "Arabic Language", code: "ARAB", category: "everyday", stream: "Languages & Literatures" },
+    { name: "Fula", code: "FULA", category: "everyday", stream: "Languages & Literatures" },
+
+    // === SOCIAL & CULTURAL STUDIES STREAM ===
+    // Core
+    { name: "History of Sierra Leone", code: "HIST", category: "core", stream: "Social & Cultural Studies" },
+    { name: "African History", code: "AHIST", category: "core", stream: "Social & Cultural Studies" },
+    { name: "Geography", code: "GEO", category: "core", stream: "Social & Cultural Studies" },
+    { name: "Music", code: "MUS", category: "core", stream: "Social & Cultural Studies" },
+    { name: "Dance & Drama Studies", code: "DDS", category: "core", stream: "Social & Cultural Studies" },
+    { name: "Politics & Governance", code: "PGOV", category: "core", stream: "Social & Cultural Studies" },
+    { name: "Social Studies & Civics", code: "SSC", category: "core", stream: "Social & Cultural Studies" },
+    { name: "Religious & Moral Education", code: "RME101", category: "core", stream: "Social & Cultural Studies" },
+    // Applied
+    { name: "Music as Applied Subject", code: "MUS101", category: "applied", stream: "Social & Cultural Studies" },
+    { name: "Entertainment Industry", code: "ENTI", category: "applied", stream: "Social & Cultural Studies" },
+    { name: "Derivatives of Religious & Moral Education", code: "DRME", category: "applied", stream: "Social & Cultural Studies" },
+    { name: "Dance Performance & Appreciation", code: "DPA", category: "applied", stream: "Social & Cultural Studies" },
+    { name: "Mining Industry & The Environment", code: "MIE", category: "applied", stream: "Social & Cultural Studies" },
+    { name: "Fishing Industry & The Environment", code: "FIE", category: "applied", stream: "Social & Cultural Studies" },
+    { name: "Tourism & Conservation", code: "TOUC", category: "applied", stream: "Social & Cultural Studies" },
+    // Everyday
+    { name: "Living with Religious & Moral Education", code: "LRME", category: "everyday", stream: "Social & Cultural Studies" },
+
+    // === ECONOMICS, BUSINESS & ENTREPRENEURSHIP STREAM ===
+    // Core
+    { name: "Principles of Economics", code: "ECON", category: "core", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Entrepreneurship", code: "ENTR", category: "core", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Principles of Accounting", code: "ACCT", category: "core", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Business Management Studies", code: "BMS", category: "core", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Principles of Commerce", code: "COMM", category: "core", stream: "Economics, Business & Entrepreneurship" },
+    // Applied
+    { name: "Principles of Marketing", code: "MKTG", category: "applied", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Business Accounting", code: "BACC", category: "applied", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Clerical Office Duties", code: "COD", category: "applied", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Insurance Management", code: "INSM", category: "applied", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Business Economics", code: "BECON", category: "applied", stream: "Economics, Business & Entrepreneurship" },
+    // Everyday
+    { name: "Business & Society", code: "BSOC", category: "everyday", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Customer Relations Management", code: "CRM", category: "everyday", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Micro/Small/Medium Enterprise Management", code: "MSME", category: "everyday", stream: "Economics, Business & Entrepreneurship" },
+    { name: "Business Ethics", code: "BETH", category: "everyday", stream: "Economics, Business & Entrepreneurship" },
   ];
 
   switch (schoolType) {
     case SchoolType.PRIMARY:
-      return [
-        ...core,
-        { name: "Environmental Science", code: "ENV" },
-        { name: "Creative Arts", code: "ARTS" },
-        { name: "Physical Education", code: "PE" },
-        { name: "Religious Studies", code: "REL" },
-        { name: "Social Studies", code: "SOC" },
-        { name: "Krio Language", code: "KRIO" },
-      ];
+      return primarySubjects;
     case SchoolType.JUNIOR_SECONDARY:
-      return [
-        ...core,
-        { name: "Biology", code: "BIO" },
-        { name: "Physics", code: "PHY" },
-        { name: "Chemistry", code: "CHEM" },
-        { name: "Geography", code: "GEO" },
-        { name: "History", code: "HIST" },
-        { name: "Agricultural Science", code: "AGRI" },
-        { name: "Computer Studies", code: "COMP" },
-        { name: "Home Economics", code: "HOME" },
-      ];
+      return jssSubjects;
     case SchoolType.SENIOR_SECONDARY:
-      return [
-        ...core,
-        { name: "Biology", code: "BIO" },
-        { name: "Physics", code: "PHY" },
-        { name: "Chemistry", code: "CHEM" },
-        { name: "Geography", code: "GEO" },
-        { name: "History", code: "HIST" },
-        { name: "Agricultural Science", code: "AGRI" },
-        { name: "Economics", code: "ECON" },
-        { name: "Government", code: "GOV" },
-      ];
+      return sssSubjects;
+    case SchoolType.COMBINED:
     default:
-      return [
-        ...core,
-        { name: "Biology", code: "BIO" },
-        { name: "Physics", code: "PHY" },
-        { name: "Chemistry", code: "CHEM" },
-      ];
+      return [...primarySubjects, ...jssSubjects, ...sssSubjects];
   }
 }
 
