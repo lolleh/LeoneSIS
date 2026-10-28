@@ -18,7 +18,7 @@
     schoolClass: ""
   };
 
-  const canManage = () => ["ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
+  const canManage = () => ["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
 
   function formValues(form) {
     const data = {};

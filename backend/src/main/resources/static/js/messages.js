@@ -18,7 +18,7 @@
     directory: null
   };
 
-  const isStaff = () => ["SUPER_ADMIN", "ADMIN", "TEACHER", "STAFF"].includes(APP.user.role);
+  const isStaff = () => ["SUPER_ADMIN", "SCHOOL_ADMIN", "ADMIN", "TEACHER", "STAFF"].includes(APP.user.role);
 
   const AUDIENCE_LABELS = {
     USER: "Direct message",

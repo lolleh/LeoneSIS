@@ -17,7 +17,7 @@
   };
 
   const ALLOWED = ["pdf", "txt", "md", "epub"];
-  const canAdmin = () => ["ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
+  const canAdmin = () => ["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
 
   function categories() {
     return Array.from(new Set(state.books.map((book) => book.category).filter(Boolean))).sort();

@@ -31,7 +31,7 @@
   };
 
   const isSuper = () => APP.user.role === "SUPER_ADMIN";
-  const canManage = () => ["ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
+  const canManage = () => ["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
   const modulesForRole = (role) => ROLE_DEFAULTS[role] || [];
 
   function moduleLabel(key) {

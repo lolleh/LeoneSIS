@@ -18,8 +18,8 @@
   };
 
   const family = () => APP.family;
-  const canCreate = () => ["ADMIN", "SUPER_ADMIN", "TEACHER"].includes(APP.user.role);
-  const canDelete = () => ["ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
+  const canCreate = () => ["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER"].includes(APP.user.role);
+  const canDelete = () => ["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"].includes(APP.user.role);
 
   const TYPES = ["QUIZ", "ASSIGNMENT", "TEST", "EXAM", "PROJECT"];
 

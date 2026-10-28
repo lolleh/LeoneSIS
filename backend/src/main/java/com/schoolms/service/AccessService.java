@@ -41,7 +41,9 @@ public class AccessService {
 
     static {
         DEFAULTS.put("SUPER_ADMIN", MODULES);
-        DEFAULTS.put("ADMIN", List.of("dashboard", "users", "students", "staff",
+        DEFAULTS.put("ADMIN", List.of("dashboard", "schools", "users", "students", "staff",
+                "attendance", "library", "messages", "grades", "fees", "notifications"));
+        DEFAULTS.put("SCHOOL_ADMIN", List.of("dashboard", "schools", "users", "students", "staff",
                 "attendance", "library", "messages", "grades", "fees", "notifications"));
         DEFAULTS.put("TEACHER", List.of("dashboard", "students", "attendance", "library",
                 "messages", "grades", "notifications"));
