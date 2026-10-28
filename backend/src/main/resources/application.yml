@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-stacktrace: never
+
+spring:
+  application:
+    name: schoolms
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/schoolms}
+    username: ${SPRING_DATASOURCE_USERNAME:schoolms}
+    password: ${SPRING_DATASOURCE_PASSWORD:schoolms}
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 30MB
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true
+
+app:
+  upload-dir: ${APP_UPLOAD_DIR:/data/uploads}
+  seed-demo-data: ${APP_SEED_DEMO_DATA:true}
+  session-days: 7
+
+logging:
+  level:
+    root: INFO
+    com.schoolms: INFO
+    org.hibernate.SQL: WARN

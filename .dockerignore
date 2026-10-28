@@ -1,0 +1,10 @@
+.git/
+.gitignore
+.env
+*.md
+backend/target/
+backend/.idea/
+backend/*.iml
+**/__pycache__/
+**/*.pyc
+db/*.sql

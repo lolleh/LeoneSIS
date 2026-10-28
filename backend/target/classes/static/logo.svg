@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SchoolMS">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1"/>
+      <stop offset=".52" stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#0891b2"/>
+    </linearGradient>
+    <linearGradient id="page" x1="32" y1="36" x2="32" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e0f2fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="#ffffff" stroke-opacity=".16"/>
+  <path d="M12 20.5 32 12l20 8.5L32 29 12 20.5Z" fill="#ffffff"/>
+  <path d="M20 26.5v8.2c0 3.2 5.4 5.8 12 5.8s12-2.6 12-5.8v-8.2" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-opacity=".9"/>
+  <path d="M52 20.5v9.4" stroke="#a5f3fc" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="52" cy="32.2" r="2.3" fill="#a5f3fc"/>
+  <path d="M32 37.4c-4.3-2.8-8.5-3.8-13.2-3.8v15.5c4.7 0 8.9.9 13.2 3.8 4.3-2.9 8.5-3.8 13.2-3.8V33.6c-4.7 0-8.9 1-13.2 3.8Z" fill="url(#page)"/>
+  <path d="M32 37.4v15.5" stroke="#4f46e5" stroke-width="2.1" stroke-linecap="round" stroke-opacity=".75"/>
+  <path d="M22.5 39.6c2.5.1 4.7.8 6.6 1.9M41.5 39.6c-2.5.1-4.7.8-6.6 1.9" fill="none" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

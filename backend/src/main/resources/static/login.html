@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <title>Sign in · LeoneSIS</title>
+  <link rel="icon" type="image/png" href="/logo-mark.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="login-body">
+  <div class="login-shell">
+    <section class="login-showcase">
+      <div class="login-showcase-top">
+        <div class="login-logo-plate">
+          <img src="/logo-light.png" alt="LeoneSIS — Every Student. Every School. One System.">
+        </div>
+        <span class="login-secure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg> Secure school workspace</span>
+      </div>
+
+      <div class="login-showcase-copy">
+        <span class="login-eyebrow">One connected school community</span>
+        <h1>Every student.<br><span>Every school.</span><br>One system.</h1>
+        <p class="login-lede">
+          Enrollment, attendance, grades, library resources, messaging and school fees —
+          everything your community needs, in one calm and secure place.
+        </p>
+
+        <div class="login-points">
+          <div class="login-point">
+            <span class="login-point-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/><path d="m8.8 15.8 2.2 2.2 4.4-4.5"/></svg></span>
+            <span><b>Attendance that reaches home</b><small>Families are alerted the moment a child is absent.</small></span>
+          </div>
+          <div class="login-point">
+            <span class="login-point-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V7A1.5 1.5 0 0 1 4 5.5Z"/><path d="M2.5 9h19"/><path d="M16.5 14.5h2"/></svg></span>
+            <span><b>Fees with a clear audit trail</b><small>Charges, payments, balances and printable receipts.</small></span>
+          </div>
+          <div class="login-point">
+            <span class="login-point-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5.5"/><path d="M15.6 12.8 17 22l-5-2.8L7 22l1.4-9.2"/></svg></span>
+            <span><b>Results families can trust</b><small>Published grades appear instantly in the family portal.</small></span>
+          </div>
+          <div class="login-point">
+            <span class="login-point-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg></span>
+            <span><b>Everyone in the loop</b><small>Message parents, forms or the whole staff room.</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="login-showcase-foot">
+        <span>Multi-school enrollment · Attendance · Grades · Library · Messaging · Fees</span>
+        <span>LeoneSIS · Sierra Leone</span>
+      </div>
+    </section>
+
+    <section class="login-form-panel">
+      <div class="login-form-wrap">
+        <div class="login-mobile-brand">
+          <img src="/logo.png" alt="LeoneSIS">
+        </div>
+
+        <div class="login-form-head">
+          <span class="login-kicker">Welcome back</span>
+          <h2>Sign in to LeoneSIS</h2>
+          <p>Use your school account to continue to your workspace.</p>
+        </div>
+
+        <div class="login-error" id="loginError" role="alert" aria-live="polite"></div>
+
+        <form id="loginForm" novalidate>
+          <div class="login-field">
+            <label for="username">Username</label>
+            <div class="login-input-wrap">
+              <span class="login-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21v-1.5a6 6 0 0 1 6-6h3a6 6 0 0 1 6 6V21"/></svg></span>
+              <input class="input login-input" id="username" name="username" type="text" autocomplete="username"
+                     placeholder="e.g. vlolleh" spellcheck="false" autocapitalize="none" required>
+            </div>
+          </div>
+
+          <div class="login-field">
+            <div class="login-label-row">
+              <label for="password">Password</label>
+              <a class="login-link" href="mailto:support@leonesis.local?subject=LeoneSIS%20account%20help">Need help?</a>
+            </div>
+            <div class="login-input-wrap">
+              <span class="login-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="10.5" width="17" height="11" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></svg></span>
+              <input class="input login-input" id="password" name="password" type="password" autocomplete="current-password"
+                     placeholder="Enter your password" required>
+              <button type="button" id="togglePassword" class="login-eye" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="login-options">
+            <label class="login-check">
+              <input id="rememberUsername" type="checkbox">
+              <span>Remember my username</span>
+            </label>
+            <span class="login-helper">Your account is provided by your school</span>
+          </div>
+
+          <button class="btn btn-primary login-submit" type="submit" id="loginBtn">
+            <span>Sign in</span>
+          </button>
+        </form>
+
+        <div class="login-demo">
+          <div class="login-divider"><span>Try a demo account</span></div>
+          <p class="login-demo-hint">All demo accounts use the password <code>password</code>.</p>
+          <div class="demo-creds">
+            <button class="demo-cred" type="button" data-user="vlolleh" data-pass="password">
+              <b>vlolleh</b><span>Platform administrator</span></button>
+            <button class="demo-cred" type="button" data-user="greenwoodadmin" data-pass="password">
+              <b>greenwoodadmin</b><span>School administrator</span></button>
+            <button class="demo-cred" type="button" data-user="teacher1" data-pass="password">
+              <b>teacher1</b><span>Teacher</span></button>
+            <button class="demo-cred" type="button" data-user="librarian" data-pass="password">
+              <b>librarian</b><span>Staff · library</span></button>
+            <button class="demo-cred" type="button" data-user="parent1" data-pass="password">
+              <b>parent1</b><span>Parent portal</span></button>
+            <button class="demo-cred" type="button" data-user="student1" data-pass="password">
+              <b>student1</b><span>Student portal</span></button>
+          </div>
+        </div>
+
+        <div class="login-foot">
+          <span class="login-foot-mark">LS</span>
+          <span>Protected workspace. Contact your school administrator for access.</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>
