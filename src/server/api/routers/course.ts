@@ -21,8 +21,8 @@ export const courseRouter = router({
         ...(subjectId && { subjectId }),
         ...(search && {
           OR: [
-            { courseName: { contains: search, mode: "insensitive" } },
-            { courseNumber: { contains: search, mode: "insensitive" } },
+            { course: { name: { contains: search, mode: "insensitive" } } },
+            { course: { code: { contains: search, mode: "insensitive" } } },
           ],
         }),
       };
@@ -31,9 +31,12 @@ export const courseRouter = router({
         db.courseSection.findMany({
           where,
           include: {
-            subject: true,
-            program: true,
-            teacher: {
+            course: {
+              include: {
+                subject: true,
+              },
+            },
+            primaryTeacher: {
               select: {
                 id: true,
                 firstName: true,
@@ -44,7 +47,7 @@ export const courseRouter = router({
               select: { enrollments: true },
             },
           },
-          orderBy: { courseName: "asc" },
+          orderBy: { course: { name: "asc" } },
           skip: (page - 1) * pageSize,
           take: pageSize,
         }),
@@ -66,18 +69,17 @@ export const courseRouter = router({
       const course = await db.courseSection.findFirst({
         where: { id: input.id, schoolId: ctx.schoolId },
         include: {
-          subject: true,
-          program: true,
-          teacher: {
+          course: {
+            include: {
+              subject: true,
+            },
+          },
+          primaryTeacher: {
             select: {
               id: true,
               firstName: true,
               lastName: true,
-              email: true,
             },
-          },
-          sections: {
-            orderBy: { sectionNumber: "asc" },
           },
         },
       });
@@ -107,10 +109,10 @@ export const courseRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const existing = await db.courseSection.findFirst({
+      const existing = await db.course.findFirst({
         where: {
           schoolId: ctx.schoolId,
-          courseNumber: input.courseNumber,
+          code: input.courseNumber,
         },
       });
 
@@ -121,9 +123,13 @@ export const courseRouter = router({
         });
       }
 
-      return db.courseSection.create({
+      return db.course.create({
         data: {
-          ...input,
+          name: input.courseName,
+          code: input.courseNumber,
+          description: input.description,
+          creditHours: input.credits,
+          subjectId: input.subjectId,
           schoolId: ctx.schoolId,
         },
       });
@@ -133,22 +139,18 @@ export const courseRouter = router({
     .input(
       z.object({
         id: z.string().uuid(),
-        courseName: z.string().min(1).max(255).optional(),
-        courseNumber: z.string().min(1).max(50).optional(),
+        name: z.string().min(1).max(255).optional(),
+        code: z.string().min(1).max(50).optional(),
         description: z.string().optional(),
-        credits: z.number().min(0).max(10).optional(),
+        creditHours: z.number().min(0).max(10).optional(),
         subjectId: z.string().uuid().optional(),
-        programId: z.string().uuid().optional(),
-        teacherId: z.string().uuid().optional(),
-        gradeMin: z.number().int().min(0).max(12).optional(),
-        gradeMax: z.number().int().min(0).max(12).optional(),
         isActive: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
 
-      const course = await db.courseSection.findFirst({
+      const course = await db.course.findFirst({
         where: { id, schoolId: ctx.schoolId },
       });
 
@@ -159,11 +161,11 @@ export const courseRouter = router({
         });
       }
 
-      if (data.courseNumber && data.courseNumber !== course.courseNumber) {
-        const duplicate = await db.courseSection.findFirst({
+      if (data.code && data.code !== course.code) {
+        const duplicate = await db.course.findFirst({
           where: {
             schoolId: ctx.schoolId,
-            courseNumber: data.courseNumber,
+            code: data.code,
             id: { not: id },
           },
         });
@@ -176,7 +178,7 @@ export const courseRouter = router({
         }
       }
 
-      return db.courseSection.update({
+      return db.course.update({
         where: { id },
         data,
       });
@@ -185,11 +187,8 @@ export const courseRouter = router({
   delete: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const course = await db.courseSection.findFirst({
+      const course = await db.course.findFirst({
         where: { id: input.id, schoolId: ctx.schoolId },
-        include: {
-          _count: { select: { enrollments: true } },
-        },
       });
 
       if (!course) {
@@ -199,14 +198,7 @@ export const courseRouter = router({
         });
       }
 
-      if (course._count.enrollments > 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Cannot delete course with active enrollments",
-        });
-      }
-
-      return db.courseSection.delete({ where: { id: input.id } });
+      return db.course.delete({ where: { id: input.id } });
     }),
 
   getSections: protectedProcedure
@@ -227,21 +219,7 @@ export const courseRouter = router({
           ...(teacherId && { teacherId }),
           ...(markingPeriodId && { markingPeriodId }),
         },
-        include: {
-          courseSection: true,
-          teacher: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          markingPeriod: true,
-          _count: {
-            select: { enrollments: true },
-          },
-        },
-        orderBy: { sectionNumber: "asc" },
+        orderBy: { name: "asc" },
       });
     }),
 
@@ -258,26 +236,14 @@ export const courseRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const existing = await db.section.findFirst({
-        where: {
-          schoolId: ctx.schoolId,
-          courseSectionId: input.courseSectionId,
-          sectionNumber: input.sectionNumber,
-          markingPeriodId: input.markingPeriodId,
-        },
-      });
-
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Section number already exists for this course and marking period",
-        });
-      }
-
       return db.section.create({
         data: {
-          ...input,
+          name: input.sectionNumber,
+          code: input.sectionNumber,
+          academicYear: input.markingPeriodId,
+          maxCapacity: input.maxCapacity,
           schoolId: ctx.schoolId,
+          gradeLevelId: "00000000-0000-0000-0000-000000000000",
         },
       });
     }),
@@ -324,10 +290,6 @@ export const courseRouter = router({
     .mutation(async ({ input, ctx }) => {
       const section = await db.section.findFirst({
         where: { id: input.sectionId, schoolId: ctx.schoolId },
-        include: {
-          _count: { select: { enrollments: true } },
-          courseSection: true,
-        },
       });
 
       if (!section) {
@@ -337,7 +299,7 @@ export const courseRouter = router({
         });
       }
 
-      if (section._count.enrollments >= section.maxCapacity) {
+      if (section.currentEnrollment >= section.maxCapacity) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Section is at full capacity",
@@ -346,7 +308,7 @@ export const courseRouter = router({
 
       const existingEnrollment = await db.enrollment.findFirst({
         where: {
-          sectionId: input.sectionId,
+          homeroomSectionId: input.sectionId,
           studentId: input.studentId,
           status: "ACTIVE",
         },
@@ -363,10 +325,6 @@ export const courseRouter = router({
         where: {
           studentId: input.studentId,
           status: "ACTIVE",
-          section: {
-            markingPeriodId: section.markingPeriodId,
-            schoolId: ctx.schoolId,
-          },
         },
       });
 
@@ -379,11 +337,14 @@ export const courseRouter = router({
 
       return db.enrollment.create({
         data: {
-          sectionId: input.sectionId,
+          homeroomSectionId: input.sectionId,
           studentId: input.studentId,
           schoolId: ctx.schoolId,
           status: "ACTIVE",
-          enrolledAt: new Date(),
+          entryDate: new Date(),
+          gradeLevelId: "00000000-0000-0000-0000-000000000000",
+          academicYear: "",
+          enrollmentType: "NEW",
         },
       });
     }),
@@ -399,7 +360,7 @@ export const courseRouter = router({
     .mutation(async ({ input, ctx }) => {
       const enrollment = await db.enrollment.findFirst({
         where: {
-          sectionId: input.sectionId,
+          homeroomSectionId: input.sectionId,
           studentId: input.studentId,
           status: "ACTIVE",
           schoolId: ctx.schoolId,
@@ -416,9 +377,8 @@ export const courseRouter = router({
       return db.enrollment.update({
         where: { id: enrollment.id },
         data: {
-          status: "DROPPED",
-          droppedAt: new Date(),
-          dropReason: input.reason,
+          status: "WITHDRAWN",
+          exitDate: new Date(),
         },
       });
     }),
@@ -437,7 +397,7 @@ export const courseRouter = router({
         },
         include: {
           _count: {
-            select: { courseSections: true },
+            select: { subjects: true },
           },
         },
         orderBy: { name: "asc" },
@@ -494,11 +454,6 @@ export const courseRouter = router({
             ],
           }),
         },
-        include: {
-          _count: {
-            select: { courseSections: true },
-          },
-        },
         orderBy: { name: "asc" },
       });
     }),
@@ -531,6 +486,7 @@ export const courseRouter = router({
         data: {
           ...input,
           schoolId: ctx.schoolId,
+          programId: "00000000-0000-0000-0000-000000000000",
         },
       });
     }),

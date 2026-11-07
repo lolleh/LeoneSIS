@@ -109,14 +109,13 @@ export default function DisciplinePage() {
     color: "#ef4444",
   });
 
-  const { data: incidents = [], isLoading: loadingIncidents } = api.discipline?.listIncidents?.useQuery({
-    search: search || undefined,
+  const { data: incidents = [], isLoading: loadingIncidents } = api.behavior?.listIncidents?.useQuery({
     status: statusFilter !== "all" ? statusFilter : undefined,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
+    startDate: dateFrom || undefined,
+    endDate: dateTo || undefined,
   }) ?? { data: [], isLoading: false };
 
-  const { data: categories = [] } = api.discipline?.listCategories?.useQuery() ?? { data: [] };
+  const { data: categories = [] } = api.behavior?.listCategories?.useQuery() ?? { data: [] };
 
   const { data: students = [] } = api.student?.list?.useQuery({ pageSize: 9999 })?.data?.students
     ? { data: api.student.list.useQuery({ pageSize: 9999 }).data!.students }
@@ -125,8 +124,8 @@ export default function DisciplinePage() {
   const utils = api.useUtils();
 
   const totalIncidents = incidents.length;
-  const openIncidents = incidents.filter((i: Incident) => i.status === "open").length;
-  const positiveCount = incidents.filter((i: Incident) => i.isPositive).length;
+  const openIncidents = incidents.filter((i) => i.status === "open").length;
+  const positiveCount = incidents.filter((i) => (i as any).isPositive).length;
 
   const stats = [
     { label: "Total Incidents", value: totalIncidents, icon: AlertTriangle, color: "text-blue-600" },
@@ -253,14 +252,14 @@ export default function DisciplinePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {incidents.map((incident: Incident) => (
+                    {incidents.map((incident) => (
                       <TableRow key={incident.id}>
-                        <TableCell className="font-medium">{incident.studentName}</TableCell>
+                        <TableCell className="font-medium">{incident.student?.firstName} {incident.student?.lastName}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{incident.category}</Badge>
+                          <Badge variant="outline">{incident.behaviorCategory?.name}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={SEVERITY_VARIANT[incident.severity] ?? "secondary"}>
+                          <Badge variant={SEVERITY_VARIANT[incident.severity ?? "medium"] ?? "secondary"}>
                             {incident.severity}
                           </Badge>
                         </TableCell>
@@ -271,7 +270,7 @@ export default function DisciplinePage() {
                             {incident.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>{incident.reportedBy}</TableCell>
+                        <TableCell>{incident.reportedBy?.firstName} {incident.reportedBy?.lastName}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button
@@ -280,14 +279,14 @@ export default function DisciplinePage() {
                               onClick={() => {
                                 setForm({
                                   studentId: incident.studentId,
-                                  category: incident.category,
-                                  incidentDate: incident.incidentDate,
-                                  severity: incident.severity,
-                                  location: incident.location,
-                                  description: incident.description,
-                                  isPositive: incident.isPositive,
+                                  category: incident.behaviorCategory?.name ?? "",
+                                  incidentDate: incident.incidentDate ? incident.incidentDate.toISOString().split("T")[0] : "",
+                                  severity: incident.severity ?? "medium",
+                                  location: incident.location ?? "",
+                                  description: incident.description ?? "",
+                                  isPositive: false,
                                 });
-                                setEditIncident(incident);
+                                setEditIncident(incident as unknown as Incident);
                               }}
                             >
                               <Pencil className="h-4 w-4" />
@@ -298,7 +297,7 @@ export default function DisciplinePage() {
                                 size="icon"
                                 onClick={() => {
                                   setResolveForm({ action: "", actionDuration: "", status: "resolved" });
-                                  setResolveIncident(incident);
+                                  setResolveIncident(incident as unknown as Incident);
                                 }}
                               >
                                 <CheckCircle className="h-4 w-4" />
@@ -352,18 +351,18 @@ export default function DisciplinePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {categories.map((cat: BehaviorCategory) => (
+                    {categories.map((cat) => (
                       <TableRow key={cat.id}>
                         <TableCell className="font-medium">{cat.name}</TableCell>
                         <TableCell>
-                          <Badge variant={cat.type === "positive" ? "default" : "destructive"}>
-                            {cat.type}
+                          <Badge variant={cat.categoryType === "positive" ? "default" : "destructive"}>
+                            {cat.categoryType}
                           </Badge>
                         </TableCell>
                         <TableCell>{cat.severityLevel}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 rounded-full" style={{ backgroundColor: cat.color }} />
+                            <div className="h-4 w-4 rounded-full" style={{ backgroundColor: cat.color ?? undefined }} />
                             <span className="text-xs text-muted-foreground">{cat.color}</span>
                           </div>
                         </TableCell>
@@ -375,11 +374,11 @@ export default function DisciplinePage() {
                               onClick={() => {
                                 setCatForm({
                                   name: cat.name,
-                                  type: cat.type,
-                                  severityLevel: cat.severityLevel,
-                                  color: cat.color,
+                                  type: cat.categoryType as "positive" | "violation",
+                                  severityLevel: String(cat.severityLevel),
+                                  color: cat.color ?? "",
                                 });
-                                setEditCategory(cat);
+                                setEditCategory(cat as unknown as BehaviorCategory);
                                 setCategoryFormOpen(true);
                               }}
                             >
@@ -431,7 +430,7 @@ export default function DisciplinePage() {
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                   <SelectContent>
-                    {(categories as BehaviorCategory[]).map((c) => (
+                    {(categories as unknown as BehaviorCategory[]).map((c) => (
                       <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -501,9 +500,9 @@ export default function DisciplinePage() {
             <Button variant="outline" onClick={() => { setCreateOpen(false); setEditIncident(null); }}>Cancel</Button>
             <Button onClick={() => {
               if (editIncident) {
-                // api.discipline.updateIncident.mutate({ id: editIncident.id, ...form });
+                // api.behavior.updateIncident.mutate({ id: editIncident.id, ...form });
               } else {
-                // api.discipline.createIncident.mutate(form);
+                // api.behavior.createIncident.mutate(form);
               }
               setCreateOpen(false);
               setEditIncident(null);
@@ -543,7 +542,7 @@ export default function DisciplinePage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setResolveIncident(null)}>Cancel</Button>
             <Button onClick={() => {
-              // api.discipline.resolveIncident.mutate({ id: resolveIncident!.id, ...resolveForm });
+              // api.behavior.resolveIncident.mutate({ id: resolveIncident!.id, ...resolveForm });
               setResolveIncident(null);
             }}>Resolve</Button>
           </DialogFooter>
@@ -610,9 +609,9 @@ export default function DisciplinePage() {
             <Button variant="outline" onClick={() => { setCategoryFormOpen(false); setEditCategory(null); }}>Cancel</Button>
             <Button onClick={() => {
               if (editCategory) {
-                // api.discipline.updateCategory.mutate({ id: editCategory.id, ...catForm });
+                // api.behavior.updateCategory.mutate({ id: editCategory.id, ...catForm });
               } else {
-                // api.discipline.createCategory.mutate(catForm);
+                // api.behavior.createCategory.mutate(catForm);
               }
               setCategoryFormOpen(false);
               setEditCategory(null);
@@ -635,7 +634,7 @@ export default function DisciplinePage() {
             <Button
               variant="destructive"
               onClick={() => {
-                // api.discipline.deleteIncident.mutate({ id: deleteConfirm! });
+                // api.behavior.deleteIncident.mutate({ id: deleteConfirm! });
                 setDeleteConfirm(null);
               }}
             >
@@ -657,7 +656,7 @@ export default function DisciplinePage() {
             <Button
               variant="destructive"
               onClick={() => {
-                // api.discipline.deleteCategory.mutate({ id: deleteCategoryConfirm! });
+                // api.behavior.deleteCategory.mutate({ id: deleteCategoryConfirm! });
                 setDeleteCategoryConfirm(null);
               }}
             >

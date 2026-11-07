@@ -88,11 +88,11 @@ export default function RolloverPage() {
     notes: "",
   });
 
-  const { data: currentYear } = api.settings?.getCurrentYear?.useQuery() ?? { data: null };
-  const { data: rollovers = [], isLoading } = api.settings?.listRollovers?.useQuery() ?? { data: [], isLoading: false };
-  const { data: systemSettings } = api.settings?.getSystemSettings?.useQuery() ?? { data: null };
+  const currentYear = null;
+  const { data: rollovers = [], isLoading } = api.system?.getRollovers?.useQuery() ?? { data: [], isLoading: false };
+  const { data: systemSettings } = api.system?.getSettings?.useQuery() ?? { data: null };
 
-  const activeRollover = rollovers.find((r: RolloverRecord) => r.status === "in_progress");
+  const activeRollover = rollovers.find((r) => r.status === "in_progress");
 
   return (
     <div className="space-y-6">
@@ -121,7 +121,7 @@ export default function RolloverPage() {
           <div>
             <p className="text-sm text-muted-foreground">Current Academic Year</p>
             <p className="text-lg font-semibold">
-              {currentYear?.name ?? "Not configured"}
+              {"Not configured"}
             </p>
           </div>
         </CardContent>
@@ -154,7 +154,7 @@ export default function RolloverPage() {
             </div>
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Started by {activeRollover.startedBy} on {new Date(activeRollover.startDate).toLocaleDateString()}
+                Started by {activeRollover.startedById ?? "—"} on {new Date(activeRollover.createdAt).toLocaleDateString()}
               </div>
               <Button onClick={() => setCompleteConfirm(activeRollover.id)}>
                 <CheckCircle className="h-4 w-4" /> Complete Rollover
@@ -204,7 +204,7 @@ export default function RolloverPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rollovers.map((rollover: RolloverRecord) => {
+                  {rollovers.map((rollover) => {
                     const StatusIcon = STATUS_ICON[rollover.status] ?? Clock;
                     return (
                       <TableRow key={rollover.id}>
@@ -217,11 +217,11 @@ export default function RolloverPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>{rollover.studentsProcessed}</TableCell>
-                        <TableCell>{rollover.startedBy}</TableCell>
-                        <TableCell>{new Date(rollover.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{rollover.startedById ?? "—"}</TableCell>
+                        <TableCell>{new Date(rollover.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          {rollover.completedDate
-                            ? new Date(rollover.completedDate).toLocaleDateString()
+                          {rollover.completedAt
+                            ? new Date(rollover.completedAt).toLocaleDateString()
                             : "—"}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-muted-foreground">

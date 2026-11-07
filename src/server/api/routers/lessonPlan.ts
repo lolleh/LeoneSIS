@@ -57,7 +57,7 @@ export const lessonPlanRouter = createTRPCRouter({
       data: {
         schoolId: ctx.schoolId!, staffId: input.staffId, subject: original.subject, course: original.course,
         lessonId: original.lessonId + " (copy)", unit: original.unit, instructionalGoal: original.instructionalGoal,
-        content: original.content, courseSectionId: original.courseSectionId, learningStandardIds: original.learningStandardIds,
+        content: original.content, courseSectionId: original.courseSectionId, learningStandardIds: (original.learningStandardIds as any) ?? undefined,
       },
     });
   }),

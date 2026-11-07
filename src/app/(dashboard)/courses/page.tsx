@@ -156,12 +156,12 @@ export default function CourseCatalogPage() {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-base">
-                        {course.courseName}
+                        {course.name}
                       </CardTitle>
-                      <CardDescription>{course.courseNumber}</CardDescription>
+                      <CardDescription>{course.academicYear}</CardDescription>
                     </div>
                     <Badge variant="outline" className="shrink-0">
-                      {course.subject?.name ?? "N/A"}
+                      {((course as { subject?: { name: string } | null }).subject?.name) ?? "N/A"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -169,18 +169,18 @@ export default function CourseCatalogPage() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <CreditCard className="h-3.5 w-3.5" />
-                      {course.credits} credits
+                      {course.maxCapacity} credits
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Layers className="h-3.5 w-3.5" />
-                      {course._count?.enrollments ?? 0} enrolled
+                      {course.currentEnrollment ?? 0} enrolled
                     </span>
-                    {course.teacher && (
+                    {((course as { teacher?: { firstName: string; lastName: string } | null }).teacher && (
                       <span className="flex items-center gap-1.5">
                         <Users className="h-3.5 w-3.5" />
-                        {course.teacher.firstName} {course.teacher.lastName}
+                        {((course as { teacher?: { firstName: string; lastName: string } | null }).teacher?.firstName)} {((course as { teacher?: { firstName: string; lastName: string } | null }).teacher?.lastName)}
                       </span>
-                    )}
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -223,26 +223,26 @@ export default function CourseCatalogPage() {
                     }
                   >
                     <td className="p-4 align-middle font-medium">
-                      {course.courseName}
+                      {course.name}
                     </td>
                     <td className="p-4 align-middle text-muted-foreground">
-                      {course.courseNumber}
+                      {course.academicYear}
                     </td>
                     <td className="p-4 align-middle">
                       <Badge variant="outline">
-                        {course.subject?.name ?? "N/A"}
+                        {((course as { subject?: { name: string } | null }).subject?.name) ?? "N/A"}
                       </Badge>
                     </td>
                     <td className="p-4 align-middle text-muted-foreground">
-                      {course.credits}
+                      {course.maxCapacity}
                     </td>
                     <td className="p-4 align-middle text-muted-foreground">
-                      {course._count?.enrollments ?? 0}
+                      {course.currentEnrollment ?? 0}
                     </td>
                     <td className="p-4 align-middle text-muted-foreground">
-                      {course.teacher
-                        ? `${course.teacher.firstName} ${course.teacher.lastName}`
-                        : "—"}
+                      {((course as { teacher?: { firstName: string; lastName: string } | null }).teacher
+                        ? `${((course as { teacher?: { firstName: string; lastName: string } | null }).teacher?.firstName)} ${((course as { teacher?: { firstName: string; lastName: string } | null }).teacher?.lastName)}`
+                        : "—")}
                     </td>
                   </tr>
                 ))}

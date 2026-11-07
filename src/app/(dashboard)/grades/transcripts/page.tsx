@@ -94,11 +94,11 @@ export default function TranscriptsPage() {
                   }}
                 >
                   <span className="font-medium">{s.firstName} {s.lastName}</span>
-                  {s.enrollments[0]?.gradeLevel && (
+                  {((s as { enrollments?: { gradeLevel: { name: string } }[] }).enrollments?.[0]?.gradeLevel && (
                     <span className="ml-2 text-muted-foreground">
-                      ({s.enrollments[0].gradeLevel.name})
+                      ({((s as { enrollments?: { gradeLevel: { name: string } }[] }).enrollments?.[0]?.gradeLevel.name)})
                     </span>
-                  )}
+                  ))}
                 </button>
               ))}
             </div>

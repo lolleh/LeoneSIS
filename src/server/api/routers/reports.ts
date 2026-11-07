@@ -247,7 +247,7 @@ export const reportsRouter = router({
             select: { maxScore: true, title: true },
           },
           student: {
-            select: { id: true, firstName: true, lastName: true, gradeLevelId: true },
+            select: { id: true, firstName: true, lastName: true },
           },
         },
       });

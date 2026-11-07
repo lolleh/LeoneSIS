@@ -580,8 +580,8 @@ function TakeAttendanceInline() {
             </SelectTrigger>
             <SelectContent>
               {sections.data?.map((entry) => (
-                <SelectItem key={entry.sectionId} value={entry.sectionId}>
-                  {entry.section.courseSection.name}
+                <SelectItem key={entry.courseSection.id} value={entry.courseSection.id}>
+                  {entry.courseSection.name}
                 </SelectItem>
               ))}
             </SelectContent>

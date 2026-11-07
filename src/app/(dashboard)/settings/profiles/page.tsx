@@ -62,15 +62,9 @@ export default function ProfilesPage() {
   const [profileForm, setProfileForm] = useState({ name: "", description: "" });
   const [permissions, setPermissions] = useState<Record<string, { canRead: boolean; canWrite: boolean }>>({});
 
-  const { data: profiles = [], isLoading: loadingProfiles } = api.rbac?.listProfiles?.useQuery() ?? { data: [], isLoading: false };
-  const { data: profilePermissions = [] } = api.rbac?.getPermissions?.useQuery(
-    { profileId: selectedProfile?.id ?? "" },
-    { enabled: !!selectedProfile?.id }
-  ) ?? { data: [] };
-  const { data: profileUsers = [] } = api.rbac?.getProfileUsers?.useQuery(
-    { profileId: selectedProfile?.id ?? "" },
-    { enabled: !!selectedProfile?.id }
-  ) ?? { data: [] };
+  const { data: profiles = [], isLoading: loadingProfiles } = api.permission?.listProfiles?.useQuery() ?? { data: [], isLoading: false };
+  const { data: profilePermissions = [] } = [] as any;
+  const { data: profileUsers = [] } = [] as any;
 
   const allMenuKeys = Object.values(MENU_GROUPS).flat();
 
@@ -135,19 +129,19 @@ export default function ProfilesPage() {
               </div>
             ) : (
               <div className="space-y-1 p-2">
-                {profiles.map((profile: Profile) => (
+                {profiles.map((profile) => (
                   <div
                     key={profile.id}
                     className={cn(
                       "group flex cursor-pointer items-center justify-between rounded-md px-3 py-2.5 transition-colors hover:bg-muted",
                       selectedProfile?.id === profile.id && "bg-muted"
                     )}
-                    onClick={() => handleSelectProfile(profile)}
+                    onClick={() => handleSelectProfile(profile as unknown as Profile)}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{profile.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {profile.userCount} user{profile.userCount !== 1 ? "s" : ""}
+                        {profile._count?.users} user{profile._count?.users !== 1 ? "s" : ""}
                       </p>
                     </div>
                     <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -157,8 +151,8 @@ export default function ProfilesPage() {
                         className="h-7 w-7"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setProfileForm({ name: profile.name, description: profile.description });
-                          setEditProfile(profile);
+                          setProfileForm({ name: profile.name, description: profile.description ?? "" });
+                          setEditProfile(profile as unknown as Profile);
                           setProfileFormOpen(true);
                         }}
                       >

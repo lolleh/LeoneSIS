@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { PageHeader } from "@/client/components/layout/PageHeader";
 import { Card, CardContent } from "@/client/components/ui/card";
 import { Button } from "@/client/components/ui/button";
@@ -37,22 +37,25 @@ export default function GradebookPage() {
     { courseSectionId: selectedSection },
     {
       enabled: !!selectedSection,
-      onSuccess: (data) => {
-        const initialGrades: GradeMap = {};
-        data.enrolledStudents.forEach((student) => {
-          initialGrades[student.id] = {};
-          student.entries.forEach((entry) => {
-            initialGrades[student.id]![entry.assignment.id] = {
-              score: entry.score?.toString() ?? "",
-              isExempt: entry.isExempt,
-            };
-          });
-        });
-        setGrades(initialGrades);
-        setHasChanges(false);
-      },
     }
   );
+
+  useEffect(() => {
+    if (gradebook.data) {
+      const initialGrades: GradeMap = {};
+      gradebook.data.enrolledStudents.forEach((student) => {
+        initialGrades[student.id] = {};
+        student.entries.forEach((entry) => {
+          initialGrades[student.id]![entry.assignment.id] = {
+            score: entry.score?.toString() ?? "",
+            isExempt: entry.isExempt,
+          };
+        });
+      });
+      setGrades(initialGrades);
+      setHasChanges(false);
+    }
+  }, [gradebook.data]);
 
   const gradeScale = gradebook.data?.config?.gradeScale?.grades ?? [];
 

@@ -347,7 +347,7 @@ export default function CommunicationPage() {
                                 : "text-muted-foreground"
                             }
                           >
-                            {msg.sender?.name ?? "Unknown"}
+                            {(msg as { sender?: { name: string | null } | null }).sender?.name ?? "Unknown"}
                           </TableCell>
                           <TableCell className={isUnread ? "font-semibold" : ""}>
                             {msg.subject}
@@ -566,7 +566,7 @@ export default function CommunicationPage() {
                           {notice.targetRole ?? "Everyone"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(notice.startDate).toLocaleDateString()}
+                          {notice.startDate ? new Date(notice.startDate).toLocaleDateString() : "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {notice.endDate

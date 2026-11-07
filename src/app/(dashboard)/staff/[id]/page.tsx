@@ -123,11 +123,11 @@ export default function StaffDetailPage({
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>Started: {formatDate(currentEmployment?.startDate)}</span>
+              <span>Started: {formatDate(currentEmployment?.startDate ?? null)}</span>
             </div>
             <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
               <Briefcase className="h-4 w-4" />
-              <span>FTE: {currentEmployment?.fte ?? "—"}</span>
+              <span>FTE: {currentEmployment?.fte?.toString() ?? "—"}</span>
             </div>
           </CardContent>
         </Card>
@@ -235,7 +235,7 @@ export default function StaffDetailPage({
                         </TableCell>
                         <TableCell>{formatDate(employment.startDate)}</TableCell>
                         <TableCell>{formatDate(employment.endDate)}</TableCell>
-                        <TableCell>{employment.fte ?? "—"}</TableCell>
+                        <TableCell>{employment.fte?.toString() ?? "—"}</TableCell>
                         <TableCell>
                           {employment.isCurrent ? (
                             <CheckCircle2 className="h-4 w-4 text-green-600" />

@@ -190,7 +190,7 @@ export function StudentCommunicationTab({ student }: StudentCommunicationTabProp
                 <p className="text-sm">—</p>
               ) : (
                 <ul className="mt-1 space-y-1">
-                  {familyEmails.map((email, i) => (
+                  {familyEmails.map((email: string, i: number) => (
                     <li key={i} className="text-sm">
                       {email}
                     </li>
@@ -233,7 +233,7 @@ export function StudentCommunicationTab({ student }: StudentCommunicationTabProp
                 <div key={i} className="h-16 animate-pulse rounded bg-muted" />
               ))}
             </div>
-          ) : !messages || messages.length === 0 ? (
+          ) : !messages || messages.messages.length === 0 ? (
             <p className="text-sm text-muted-foreground">No messages found.</p>
           ) : (
             <Table>
@@ -246,7 +246,7 @@ export function StudentCommunicationTab({ student }: StudentCommunicationTabProp
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {messages.map((msg: any) => (
+                {messages.messages.map((msg: any) => (
                   <TableRow key={msg.id}>
                     <TableCell>{formatDate(msg.createdAt)}</TableCell>
                     <TableCell className="font-medium">{msg.subject}</TableCell>

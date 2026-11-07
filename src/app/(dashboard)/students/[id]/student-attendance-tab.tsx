@@ -28,7 +28,7 @@ export function StudentAttendanceTab({ studentId }: StudentAttendanceTabProps) {
     api.student.getAttendanceSummary.useQuery({ studentId });
 
   const { data: records, isLoading: recordsLoading } =
-    api.attendance.getAttendanceRecords.useQuery({ studentId, pageSize: 50 });
+    api.attendance.getAttendanceRecords.useQuery({ studentId });
 
   if (summaryLoading || recordsLoading) {
     return (

@@ -38,10 +38,8 @@ import { cn } from "@/client/lib/utils";
 interface BroadcastGroup {
   id: string;
   name: string;
-  description: string;
-  memberCount: number;
-  messageCount: number;
-  members?: { id: string; name: string }[];
+  description: string | null;
+  _count: { members: number; messages: number };
 }
 
 interface BroadcastMessage {
@@ -82,7 +80,7 @@ export default function BroadcastPage() {
   });
 
   const { data: groups = [], isLoading: loadingGroups } = api.broadcast?.listGroups?.useQuery() ?? { data: [], isLoading: false };
-  const { data: messages = [], isLoading: loadingMessages } = api.broadcast?.listMessages?.useQuery() ?? { data: [], isLoading: false };
+  const { data: messages = [], isLoading: loadingMessages } = api.broadcast?.listMessages?.useQuery({}) ?? { data: [], isLoading: false };
   const { data: users = [] } = api.staff?.list?.useQuery({ pageSize: 9999 }) ?? { data: [] };
 
   const filteredUsers = (users as any[]).filter((u: any) =>
@@ -152,7 +150,7 @@ export default function BroadcastPage() {
             </Card>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {groups.map((group: BroadcastGroup) => (
+              {groups.map((group) => (
                 <Card
                   key={group.id}
                   className={cn(
@@ -173,7 +171,7 @@ export default function BroadcastPage() {
                           size="icon"
                           className="h-8 w-8"
                           onClick={() => {
-                            setGroupForm({ name: group.name, description: group.description, memberIds: [] });
+                            setGroupForm({ name: group.name, description: group.description ?? "", memberIds: [] });
                             setEditGroup(group);
                             setGroupFormOpen(true);
                           }}
@@ -191,8 +189,8 @@ export default function BroadcastPage() {
                       </div>
                     </div>
                     <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {group.memberCount} members</span>
-                      <span className="flex items-center gap-1"><Send className="h-3.5 w-3.5" /> {group.messageCount} messages</span>
+                      <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {group._count.members} members</span>
+                      <span className="flex items-center gap-1"><Send className="h-3.5 w-3.5" /> {group._count.messages} messages</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -204,20 +202,13 @@ export default function BroadcastPage() {
             <Card>
               <CardHeader>
                 <CardTitle>{selectedGroup.name} - Members</CardTitle>
-                <CardDescription>{selectedGroup.memberCount} members in this group</CardDescription>
+                <CardDescription>{selectedGroup._count.members} members in this group</CardDescription>
               </CardHeader>
               <CardContent>
-                {selectedGroup.members && selectedGroup.members.length > 0 ? (
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {selectedGroup.members.map((m) => (
-                      <div key={m.id} className="flex items-center gap-3 rounded-md border p-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                          {m.name.split(" ").map((n: string) => n[0]).join("")}
-                        </div>
-                        <span className="text-sm font-medium">{m.name}</span>
-                      </div>
-                    ))}
-                  </div>
+                {selectedGroup._count.members > 0 ? (
+                  <p className="py-4 text-center text-sm text-muted-foreground">
+                    {selectedGroup._count.members} members in this group.
+                  </p>
                 ) : (
                   <p className="py-4 text-center text-sm text-muted-foreground">No members in this group yet.</p>
                 )}
@@ -260,11 +251,11 @@ export default function BroadcastPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {messages.map((msg: BroadcastMessage) => (
+                    {messages.map((msg) => (
                       <TableRow key={msg.id}>
                         <TableCell className="font-medium">{msg.subject}</TableCell>
-                        <TableCell>{msg.groupName}</TableCell>
-                        <TableCell>{new Date(msg.sentDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{msg.group?.name ?? "—"}</TableCell>
+                        <TableCell>{new Date(msg.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             {msg.sentViaEmail && <Badge variant="default">Email</Badge>}

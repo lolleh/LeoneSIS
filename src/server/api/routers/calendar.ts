@@ -53,7 +53,7 @@ export const calendarRouter = createTRPCRouter({
       }
       return ctx.db.calendarEvent.findMany({
         where,
-        include: { calendar: { select: { id: true, name: true, color: false } } },
+        include: { calendar: { select: { id: true, name: true } } },
         orderBy: { startDate: "asc" },
       });
     }),

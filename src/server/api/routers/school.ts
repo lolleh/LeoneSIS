@@ -218,6 +218,7 @@ export const schoolRouter = router({
         data: {
           name: input.name,
           code: input.code,
+          division: "PRIMARY",
           sortOrder: input.sortOrder,
           nextGradeLevelId: input.nextGradeLevelId,
           isActive: input.isActive,

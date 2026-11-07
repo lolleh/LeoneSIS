@@ -220,6 +220,7 @@ export const staffRouter = router({
         data: {
           ...employmentData,
           schoolId: ctx.schoolId,
+          staff: { connect: { id: staffId } },
           isCurrent: employmentData.isCurrent ?? true,
           startDate: new Date(employmentData.startDate),
           endDate: employmentData.endDate ? new Date(employmentData.endDate) : undefined,
@@ -294,6 +295,7 @@ export const staffRouter = router({
       return ctx.db.staffCertification.create({
         data: {
           ...certData,
+          staff: { connect: { id: staffId } },
           issueDate: certData.issueDate ? new Date(certData.issueDate) : undefined,
           expiryDate: certData.expiryDate ? new Date(certData.expiryDate) : undefined,
           isActive: certData.isActive ?? true,

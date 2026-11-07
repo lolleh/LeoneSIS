@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/client/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/client/components/ui/card";
 import { Button } from "@/client/components/ui/button";
@@ -56,18 +56,21 @@ export default function TakeAttendancePage() {
     },
     {
       enabled: !!selectedSection,
-      onSuccess: (data) => {
-        const records: StudentAttendance[] = data.map((record) => ({
-          studentId: record.studentId,
-          firstName: record.student.firstName,
-          lastName: record.student.lastName,
-          attendanceCodeId: record.attendanceCodeId,
-          comment: record.comment ?? "",
-        }));
-        setStudentRecords(records);
-      },
     }
   );
+
+  useEffect(() => {
+    if (enrollments.data) {
+      const records: StudentAttendance[] = enrollments.data.map((record) => ({
+        studentId: record.studentId,
+        firstName: record.student.firstName,
+        lastName: record.student.lastName,
+        attendanceCodeId: record.attendanceCodeId,
+        comment: record.comment ?? "",
+      }));
+      setStudentRecords(records);
+    }
+  }, [enrollments.data]);
 
   const takeAttendance = api.attendance.takeAttendance.useMutation({
     onSuccess: () => {
@@ -140,8 +143,8 @@ export default function TakeAttendancePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {sections.data?.map((entry) => (
-                    <SelectItem key={entry.sectionId} value={entry.sectionId}>
-                      {entry.section.courseSection.name}
+                    <SelectItem key={entry.courseSection.id} value={entry.courseSection.id}>
+                      {entry.courseSection.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

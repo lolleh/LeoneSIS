@@ -126,7 +126,7 @@ export default function NewStudentPage() {
   });
 
   const enrollmentForm = useForm<EnrollmentData>({
-    resolver: zodResolver(enrollmentSchema),
+    resolver: zodResolver(enrollmentSchema) as any,
     defaultValues: {
       gradeLevelId: "",
       academicYear: ACADEMIC_YEARS[0] ?? "",

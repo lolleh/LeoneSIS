@@ -123,17 +123,17 @@ export default function CourseDetailPage() {
   }
 
   const totalEnrolled =
-    sections?.reduce((sum, s) => sum + (s._count?.enrollments ?? 0), 0) ?? 0;
+    sections?.reduce((sum, s) => sum + (s.currentEnrollment ?? 0), 0) ?? 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={course.courseName}
-        description={course.courseNumber}
+        title={course.name}
+        description={course.academicYear}
         breadcrumbs={[
           { label: "Academic", href: "/courses" },
           { label: "Courses", href: "/courses" },
-          { label: course.courseName },
+          { label: course.name },
         ]}
         actions={
           <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function CourseDetailPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Subject</p>
-              <p className="font-medium">{course.subject?.name ?? "—"}</p>
+              <p className="font-medium">{((course as { subject?: { name: string } | null }).subject?.name) ?? "—"}</p>
             </div>
           </CardContent>
         </Card>
@@ -171,8 +171,8 @@ export default function CourseDetailPage() {
               <CreditCard className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Credits</p>
-              <p className="font-medium">{course.credits}</p>
+              <p className="text-sm text-muted-foreground">Max Capacity</p>
+              <p className="font-medium">{course.maxCapacity}</p>
             </div>
           </CardContent>
         </Card>
@@ -223,7 +223,7 @@ export default function CourseDetailPage() {
                 <DialogHeader>
                   <DialogTitle>Add Section</DialogTitle>
                   <DialogDescription>
-                    Create a new section for {course.courseName}
+                    Create a new section for {course.name}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
@@ -323,16 +323,16 @@ export default function CourseDetailPage() {
             </div>
           ) : sections && sections.length > 0 ? (
             <div className="space-y-3">
-              {sections.map((section) => (
+              {sections.map((section: any) => (
                 <Card key={section.id}>
                   <CardContent className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
-                        {section.sectionNumber}
+                        {section.code ?? section.name}
                       </div>
                       <div className="space-y-1">
                         <p className="font-medium">
-                          Section {section.sectionNumber}
+                          Section {section.code ?? section.name}
                         </p>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                           {section.teacher && (
@@ -399,7 +399,7 @@ export default function CourseDetailPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sections?.flatMap((section) =>
+                    {sections?.flatMap((section: any) =>
                       (section as any).scheduleEntries?.map((entry: any) => (
                         <TableRow key={entry.id}>
                           <TableCell className="font-medium">
@@ -444,31 +444,31 @@ export default function CourseDetailPage() {
                   <p className="text-sm font-medium text-muted-foreground">
                     Course Name
                   </p>
-                  <p>{course.courseName}</p>
+                  <p>{course.name}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Course Code
                   </p>
-                  <p>{course.courseNumber}</p>
+                  <p>{course.academicYear}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Subject
                   </p>
-                  <p>{course.subject?.name ?? "—"}</p>
+                  <p>{((course as { subject?: { name: string } | null }).subject?.name) ?? "—"}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Program
                   </p>
-                  <p>{course.program?.name ?? "—"}</p>
+                  <p>{((course as { program?: { name: string } | null }).program?.name) ?? "—"}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Credits
                   </p>
-                  <p>{course.credits}</p>
+                  <p>{course.maxCapacity}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
@@ -479,14 +479,6 @@ export default function CourseDetailPage() {
                   </Badge>
                 </div>
               </div>
-              {course.description && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Description
-                  </p>
-                  <p className="mt-1">{course.description}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -10,7 +10,6 @@ export const trpcClient = createTRPCClient<AppRouter>({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      maxBatchSize: 20,
       fetch(url, options) {
         return fetch(url, {
           ...options,

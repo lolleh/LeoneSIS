@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { db, getCurrentAcademicYear } from "@/server/db";
 
 export const attendanceRouter = router({
   getAttendanceCodes: protectedProcedure.query(async ({ ctx }) => {
@@ -486,7 +487,7 @@ export const attendanceRouter = router({
           schoolId: ctx.schoolId!,
           isActive: true,
           doesAttendance: true,
-          academicYear: ctx.db.$queryRaw`getCurrentAcademicYear()`,
+          academicYear: getCurrentAcademicYear(),
         },
         include: {
           primaryTeacher: {

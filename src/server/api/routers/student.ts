@@ -60,7 +60,7 @@ export const studentRouter = router({
     const { page, pageSize, search, gradeLevelId, status } = input;
     const skip = (page - 1) * pageSize;
 
-    const where = {
+    const where: any = {
       schoolId: ctx.schoolId,
       isActive: true,
       ...(gradeLevelId && {
@@ -74,7 +74,7 @@ export const studentRouter = router({
       ...(status && {
         enrollments: {
           some: {
-            status,
+            status: status as "ACTIVE",
           },
         },
       }),
@@ -239,6 +239,7 @@ export const studentRouter = router({
       await tx.feeAccount.create({
         data: {
           studentId: student.id,
+          schoolId: ctx.schoolId,
         },
       });
 
@@ -593,7 +594,7 @@ export const studentRouter = router({
         enrollments.map(async (enrollment) => {
           const entries = await ctx.db.gradebookEntry.findMany({
             where: { studentId: input.studentId },
-            include: { assignment: { where: { courseSectionId: enrollment.courseSectionId } } },
+            include: { assignment: true },
           });
 
           const gradedEntries = entries.filter((e) => e.assignment?.isGraded && e.score !== null);
@@ -815,10 +816,10 @@ export const studentRouter = router({
         where: { id },
         data: {
           bloodType: data.bloodType,
-          allergies: data.allergies,
-          medications: data.medications,
-          healthConditions: data.healthConditions,
-          immunizations: data.immunizations,
+          allergies: data.allergies as any,
+          medications: data.medications as any,
+          healthConditions: data.healthConditions as any,
+          immunizations: data.immunizations as any,
           doctorName: data.doctorName,
           doctorPhone: data.doctorPhone,
           insuranceProvider: data.insuranceProvider,

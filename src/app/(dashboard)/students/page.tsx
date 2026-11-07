@@ -217,7 +217,7 @@ export default function StudentsPage() {
                 </TableHeader>
                 <TableBody>
                   {students.map((student) => {
-                    const activeEnrollment = student.enrollments?.[0];
+                    const activeEnrollment = ((student as { enrollments?: { status: string; entryDate: Date; gradeLevel: { name: string } }[] }).enrollments?.[0]);
                     const enrollmentStatus = activeEnrollment?.status ?? "ACTIVE";
                     const enrollmentDate = activeEnrollment?.entryDate
                       ? new Date(activeEnrollment.entryDate).toLocaleDateString()
